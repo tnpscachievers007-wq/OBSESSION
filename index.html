@@ -5,44 +5,52 @@
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <title>Study Tracker</title>
 <style>
-:root{--bg:#14181f;--panel:#1c222c;--line:#2c3441;--tx:#f1ece2;--mut:#98a2b3;--g:#34d27b;--r:#ff5a4f;--b:#7b8cff;--idle:#5b6575}
+:root{--bg:#14181f;--panel:#1c222c;--line:#2c3441;--tx:#f1ece2;--mut:#98a2b3;--g:#34d27b;--r:#ff5a4f;--idle:#5b6575}
 *{box-sizing:border-box}
 html,body{margin:0;min-height:100%}
-body{background:var(--bg);color:var(--tx);font:16px/1.5 "Segoe UI",system-ui,sans-serif;padding:28px 20px 90px}
-main{max-width:760px;margin:0 auto}
+body{background:var(--bg);color:var(--tx);font:16px/1.5 "Segoe UI",system-ui,sans-serif;padding:28px 20px 110px}
+main{max-width:900px;margin:0 auto}
 h1{font-size:20px;font-weight:600;margin:0 0 22px;color:var(--mut)}
 .num{font-variant-numeric:tabular-nums;font-feature-settings:"tnum"}
-.hero{border-left:6px solid var(--idle);padding:6px 0 6px 22px;margin-bottom:26px;transition:border-color .2s}
-.hero .lbl{color:var(--mut);font-size:15px}
-.hero .big{font-size:clamp(56px,13vw,104px);font-weight:700;line-height:1.05;letter-spacing:-.02em}
-.hero .sub{color:var(--mut);margin-top:4px}
-.hero.low .big{color:#ffb347}
-.hero.crit .big{color:var(--r);animation:pulse 1s infinite}
-@keyframes pulse{50%{opacity:.55}}
-@media (prefers-reduced-motion:reduce){.hero.crit .big{animation:none}}
-.grid{display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px;margin-bottom:22px}
+.watches{display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:22px}
+.watch{background:var(--panel);border:2px solid var(--line);border-radius:14px;padding:18px 22px;transition:border-color .2s,opacity .2s;opacity:.65}
+.watch.on{opacity:1}
+.watch.study.on{border-color:var(--g)}
+.watch.rest.on{border-color:var(--r)}
+.watch .k{color:var(--mut);font-size:15px;display:flex;justify-content:space-between}
+.watch .big{font-size:clamp(34px,7.5vw,64px);font-weight:700;line-height:1.1;letter-spacing:-.02em;margin:4px 0}
+.watch.study .big{color:var(--g)}
+.watch.rest .big{color:var(--r)}
+.watch .sub{color:var(--mut);font-size:14px}
+.bar{height:8px;background:var(--line);border-radius:4px;overflow:hidden;margin:10px 0 6px}
+.bar i{display:block;height:100%;width:0}
+.watch.study .bar i{background:var(--g)}
+.watch.rest .bar i{background:var(--r)}
+.status{color:var(--mut);margin:0 0 20px;font-size:17px}
+.status b{color:var(--tx)}
+.grid{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:22px}
 .stat{background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:14px 16px}
 .stat .k{color:var(--mut);font-size:14px}
-.stat .v{font-size:28px;font-weight:600}
-.bar{height:10px;background:var(--line);border-radius:5px;overflow:hidden;margin:0 0 6px}
-.bar i{display:block;height:100%;width:0;background:var(--g)}
-.barnote{color:var(--mut);font-size:14px;margin-bottom:24px;display:flex;justify-content:space-between}
+.stat .v{font-size:26px;font-weight:600}
 .btns{display:flex;flex-wrap:wrap;gap:10px;margin-bottom:26px}
 button{font:inherit;color:var(--tx);background:var(--panel);border:1px solid var(--line);border-radius:8px;padding:11px 18px;cursor:pointer}
 button:hover{border-color:var(--mut)}
-button:focus-visible{outline:2px solid var(--b);outline-offset:2px}
-button:disabled{opacity:.4;cursor:default}
+button:focus-visible{outline:2px solid #7b8cff;outline-offset:2px}
 button.main{background:var(--g);border-color:var(--g);color:#06210f;font-weight:600}
 button.main.rest{background:var(--r);border-color:var(--r);color:#2a0805}
 .keys{color:var(--mut);font-size:14px;border-top:1px solid var(--line);padding-top:16px}
 .keys p{margin:4px 0}
 kbd{background:var(--panel);border:1px solid var(--line);border-radius:4px;padding:1px 7px;font:inherit;font-size:13px;color:var(--tx)}
-/* corner dot */
-.corner{position:fixed;right:16px;bottom:16px;display:flex;align-items:center;gap:12px;background:var(--panel);border:1px solid var(--line);border-radius:40px;padding:10px 20px 10px 14px;z-index:5;box-shadow:0 6px 24px rgba(0,0,0,.45);color:var(--tx);font-family:"Segoe UI",system-ui,sans-serif}
-.corner .dot{width:22px;height:22px;border-radius:50%;background:var(--idle);flex:none;box-shadow:0 0 0 4px rgba(255,255,255,.06)}
-.corner .t{font-size:26px;font-weight:700;line-height:1.1}
-.corner .l{font-size:12px;color:var(--mut)}
-.corner{cursor:pointer;user-select:none}
+/* corner dot (also used inside the pop-out window) */
+.corner{position:fixed;right:16px;bottom:16px;display:flex;align-items:center;gap:14px;background:var(--panel);border:1px solid var(--line);border-radius:22px;padding:12px 22px 12px 16px;z-index:5;box-shadow:0 6px 24px rgba(0,0,0,.45);color:var(--tx);font-family:"Segoe UI",system-ui,sans-serif;cursor:pointer;user-select:none}
+.corner .dot{width:30px;height:30px;border-radius:50%;background:var(--idle);flex:none;box-shadow:0 0 0 4px rgba(255,255,255,.06)}
+.corner .rows{display:flex;flex-direction:column;gap:2px}
+.corner .row{display:flex;align-items:baseline;gap:10px;opacity:.5}
+.corner .row.on{opacity:1}
+.corner .row .n{font-size:12px;color:var(--mut);width:42px}
+.corner .row .t{font-size:24px;font-weight:700;line-height:1.15}
+.corner #cStudy{color:var(--g)}
+.corner #cRest{color:var(--r)}
 .corner.pip{position:static;width:100vw;height:100vh;border:0;border-radius:0;box-shadow:none;justify-content:center}
 /* result */
 #result{position:fixed;inset:0;background:rgba(10,12,16,.92);display:none;align-items:center;justify-content:center;z-index:20;padding:20px}
@@ -53,85 +61,92 @@ kbd{background:var(--panel);border:1px solid var(--line);border-radius:4px;paddi
 #result.lose h2{color:var(--r)}
 #result p{color:var(--mut);margin:6px 0}
 #result button{margin-top:18px}
-@media (max-width:560px){.grid{grid-template-columns:1fr}}
+@media (max-width:620px){.watches{grid-template-columns:1fr}}
 </style>
 </head>
 <body>
 <main>
-  <h1>12 hours of study in 24</h1>
+  <h1>100 hours of study vs 100 hours of rest</h1>
 
-  <section class="hero" id="hero">
-    <div class="lbl" id="heroLbl">Rest left</div>
-    <div class="big num" id="restLeft">04:00:00</div>
-    <div class="sub" id="heroSub">Press Start. The 24-hour window begins at that moment.</div>
-  </section>
+  <div class="watches">
+    <section class="watch study" id="wStudy">
+      <div class="k"><span>Study stopwatch</span><span id="studyPct">0%</span></div>
+      <div class="big num" id="study">00:00:00</div>
+      <div class="bar"><i id="barStudy"></i></div>
+      <div class="sub num" id="studyLeft">100:00:00 to go</div>
+    </section>
+    <section class="watch rest" id="wRest">
+      <div class="k"><span>Rest stopwatch</span><span id="restPct">0%</span></div>
+      <div class="big num" id="rest">00:00:00</div>
+      <div class="bar"><i id="barRest"></i></div>
+      <div class="sub num" id="restLeft">100:00:00 left before you lose</div>
+    </section>
+  </div>
 
-  <div class="bar"><i id="bar"></i></div>
-  <div class="barnote"><span id="studyNote">Study 00:00:00 of 12:00:00</span><span id="studyLeft">12:00:00 to go</span></div>
+  <p class="status" id="status">Press Start. Both stopwatches begin from zero.</p>
 
   <div class="grid">
-    <div class="stat"><div class="k">Study stopwatch</div><div class="v num" id="study">00:00:00</div></div>
-    <div class="stat"><div class="k">Window time left</div><div class="v num" id="win">24:00:00</div></div>
-    <div class="stat"><div class="k">Sleep left (8h)</div><div class="v num" id="sleepLeft">08:00:00</div></div>
+    <div class="stat"><div class="k">Total time used</div><div class="v num" id="used">00:00:00</div></div>
+    <div class="stat"><div class="k">Window time left (of 200h)</div><div class="v num" id="win">200:00:00</div></div>
   </div>
 
   <div class="btns">
     <button class="main" id="btnMain">Start</button>
-    <button id="btnSleep" disabled>Sleep</button>
     <button id="btnPip">Pop out dot</button>
     <button id="btnReset">Reset</button>
   </div>
 
   <div class="keys">
-    <p><kbd>Space</kbd> start, then switch between study and rest &nbsp; <kbd>S</kbd> sleep / wake &nbsp; <kbd>P</kbd> pop out dot &nbsp; <kbd>Shift</kbd>+<kbd>R</kbd> reset</p>
-    <p>With another app in front: press your keyboard's <kbd>Play/Pause</kbd> media key to switch study and rest, and <kbd>Next track</kbd> to sleep or wake. This works after you press Start in this tab.</p>
+    <p>Rule: whichever stopwatch reaches 100 hours first decides it. Study reaches 100:00:00 first and you win. Rest reaches 100:00:00 first and you lose.</p>
+    <p><kbd>Space</kbd> start, then switch between study and rest &nbsp; <kbd>P</kbd> pop out dot &nbsp; <kbd>Shift</kbd>+<kbd>R</kbd> reset</p>
+    <p>Click the dot (corner or pop-out) to switch between study and rest. With another app in front, press your keyboard's <kbd>Play/Pause</kbd> media key to switch. This works after you press Start in this tab.</p>
   </div>
 </main>
 
-<div class="corner" id="corner"><span class="dot" id="dot"></span><div><div class="t num" id="cTime">--:--:--</div><div class="l" id="cLbl">Not started</div></div></div>
+<div class="corner" id="corner" title="Click to switch study / rest">
+  <span class="dot" id="dot"></span>
+  <div class="rows">
+    <div class="row" id="rowS"><span class="n">Study</span><span class="t num" id="cStudy">00:00:00</span></div>
+    <div class="row" id="rowR"><span class="n">Rest</span><span class="t num" id="cRest">00:00:00</span></div>
+  </div>
+</div>
 
 <div id="result"><div class="box"><h2 id="resH"></h2><p id="resP"></p><p id="resS"></p><button class="main" id="btnAgain">Start a new window</button></div></div>
 
 <script>
-const H=3600000, GOAL=12*H, REST=4*H, SLEEP=8*H, WIN=24*H, KEY='studyTracker.v1';
+const H=3600000, GOAL=100*H, KEY='studyTracker.v2';
 const _c={};const $=id=>_c[id]||(_c[id]=document.getElementById(id));
-['corner','dot','cTime','cLbl'].forEach($);
-const fresh=()=>({mode:'idle',start:0,last:0,study:0,rest:0,sleep:0,end:0});
-let S=(()=>{try{return JSON.parse(localStorage.getItem(KEY))||fresh()}catch(e){return fresh()}})();
+['corner','dot','cStudy','cRest','rowS','rowR'].forEach($);
+const fresh=()=>({mode:'idle',start:0,last:0,study:0,rest:0,end:0});
+let S=(()=>{try{return Object.assign(fresh(),JSON.parse(localStorage.getItem(KEY)))}catch(e){return fresh()}})();
 const save=()=>{try{localStorage.setItem(KEY,JSON.stringify(S))}catch(e){}};
-const active=()=>S.mode==='study'||S.mode==='rest'||S.mode==='sleep';
-const restLeft=()=>REST-S.rest-Math.max(0,S.sleep-SLEEP);
+const active=()=>S.mode==='study'||S.mode==='rest';
 const pad=n=>String(n).padStart(2,'0');
 function fmt(ms){ms=Math.max(0,Math.floor(ms/1000));return pad(Math.floor(ms/3600))+':'+pad(Math.floor(ms%3600/60))+':'+pad(ms%60)}
 
+/* add elapsed time to the running stopwatch; stop exactly when it hits 100h */
 function accrue(now){
   if(!active())return;
-  const t=Math.min(now,S.start+WIN);
-  const dt=Math.max(0,t-S.last);
-  S[S.mode]+=dt; S.last=t;
+  const dt=Math.max(0,now-S.last);
+  const room=GOAL-S[S.mode];
+  if(dt>=room){S[S.mode]=GOAL;S.last=S.last+room;finish(S.mode==='study'?'won':'lost',S.last);return}
+  S[S.mode]+=dt; S.last=now;
 }
 function tick(){
-  const now=Date.now();
-  if(active()){
-    accrue(now); S.last=Math.max(S.last,Math.min(now,S.start+WIN));
-    if(S.study>=GOAL){S.study=GOAL;finish('won',now)}
-    else if(restLeft()<=0){finish('lost',now,'rest')}
-    else if(now>=S.start+WIN){finish('lost',now,'time')}
-    save();
-  }
+  if(active()){accrue(Date.now());save()}
   render();
 }
-function finish(m,now,why){S.mode=m;S.end=now;S.why=why||'';save();showResult()}
+function finish(m,end){S.mode=m;S.end=end;save();showResult()}
 function setMode(m){
-  const now=Date.now(); if(!active())return;
-  accrue(now); S.last=now; S.mode=m; save(); render(); audio&&audio.play().catch(()=>{});
+  if(!active())return;
+  accrue(Date.now()); if(!active())return;
+  S.last=Date.now(); S.mode=m; save(); render(); audio&&audio.play().catch(()=>{});
 }
 function toggleStudy(){
   if(S.mode==='idle')return start();
   if(S.mode==='study')setMode('rest');
-  else if(S.mode==='rest'||S.mode==='sleep')setMode('study');
+  else if(S.mode==='rest')setMode('study');
 }
-function toggleSleep(){ if(S.mode==='sleep')setMode('study'); else if(active())setMode('sleep'); }
 function start(){
   const now=Date.now(); S=fresh(); S.mode='study'; S.start=S.last=now; save();
   $('result').classList.remove('show'); startAudio(); render();
@@ -152,11 +167,10 @@ function startAudio(){
     if(!audio){audio=new Audio(silentWav());audio.loop=true;}
     audio.play().catch(()=>{});
     if('mediaSession' in navigator){
-      navigator.mediaSession.metadata=new MediaMetadata({title:'Study Tracker',artist:'Play/Pause = study or rest, Next = sleep'});
+      navigator.mediaSession.metadata=new MediaMetadata({title:'Study Tracker',artist:'Play/Pause = switch study and rest'});
       const tg=()=>{if(active())toggleStudy();audio.play().catch(()=>{})};
       navigator.mediaSession.setActionHandler('play',tg);
       navigator.mediaSession.setActionHandler('pause',tg);
-      navigator.mediaSession.setActionHandler('nexttrack',()=>{toggleSleep();audio.play().catch(()=>{})});
       navigator.mediaSession.playbackState='playing';
     }
   }catch(e){}
@@ -169,9 +183,9 @@ async function popOut(){
   if(pip){pip.close();return}
   let w=null, why='';
   if('documentPictureInPicture' in window){
-    try{w=await documentPictureInPicture.requestWindow({width:320,height:140})}catch(e){why=e&&e.message||String(e)}
+    try{w=await documentPictureInPicture.requestWindow({width:340,height:130})}catch(e){why=e&&e.message||String(e)}
   }
-  if(!w){try{w=window.open('','studyDot','popup,width=320,height=140')}catch(e){}}
+  if(!w){try{w=window.open('','studyDot','popup,width=340,height=130')}catch(e){}}
   if(!w){alert('Could not open the pop-out.'+(why?' Reason: '+why:'')+' Allow pop-ups for this page and try again.');return}
   pip=w;
   const d=w.document;
@@ -192,40 +206,38 @@ $('corner').addEventListener('click',()=>{
 });
 
 /* render */
-const COL={study:'--g',rest:'--r',sleep:'--b',idle:'--idle',won:'--g',lost:'--r'};
+const COL={study:'--g',rest:'--r',idle:'--idle',won:'--g',lost:'--r'};
 function render(){
   const m=S.mode, css=getComputedStyle(document.documentElement), col=css.getPropertyValue(COL[m]).trim();
-  const rl=restLeft(), sl=Math.max(0,SLEEP-S.sleep), over=Math.max(0,S.sleep-SLEEP);
-  const wl=active()?S.start+WIN-Date.now():(m==='idle'?WIN:Math.max(0,S.start+WIN-S.end));
-  $('restLeft').textContent=fmt(rl);
+  const used=S.study+S.rest;
+  const winLeft=2*GOAL-used;
   $('study').textContent=fmt(S.study);
-  $('win').textContent=fmt(wl);
-  $('sleepLeft').textContent=fmt(sl)+(over?' (+'+fmt(over)+' over)':'');
-  $('bar').style.width=Math.min(100,S.study/GOAL*100)+'%';
-  $('studyNote').textContent='Study '+fmt(S.study)+' of 12:00:00';
+  $('rest').textContent=fmt(S.rest);
   $('studyLeft').textContent=fmt(GOAL-S.study)+' to go';
-  const hero=$('hero'); hero.style.borderColor=col;
-  hero.classList.toggle('low',active()&&rl<30*60000&&rl>=10*60000);
-  hero.classList.toggle('crit',active()&&rl<10*60000);
-  const lbl={idle:'Rest left',study:'Rest left (paused while you study)',rest:'Rest left (counting down)',sleep:'Rest left (sleep uses its own 8 hours)',won:'Rest left at the finish',lost:'Rest left'}[m];
-  $('heroLbl').textContent=lbl;
-  $('heroSub').textContent={idle:'Press Start. The 24-hour window begins at that moment.',
-    study:'Studying. Remaining study: '+fmt(GOAL-S.study)+', window left: '+fmt(wl),
-    rest:'Resting. Resume before this reaches zero.',
-    sleep:'Sleeping. Wake up with S, then study resumes.',
-    won:'Done. 12 hours of study completed.',lost:'The window is over.'}[m];
+  $('restLeft').textContent=fmt(GOAL-S.rest)+' left before you lose';
+  $('barStudy').style.width=Math.min(100,S.study/GOAL*100)+'%';
+  $('barRest').style.width=Math.min(100,S.rest/GOAL*100)+'%';
+  $('studyPct').textContent=(S.study/GOAL*100).toFixed(1)+'%';
+  $('restPct').textContent=(S.rest/GOAL*100).toFixed(1)+'%';
+  $('wStudy').classList.toggle('on',m==='study'||m==='won');
+  $('wRest').classList.toggle('on',m==='rest'||m==='lost');
+  $('used').textContent=fmt(used);
+  $('win').textContent=fmt(winLeft);
+  $('status').innerHTML={
+    idle:'Press Start. Both stopwatches begin from zero.',
+    study:'<b>Studying.</b> Study stopwatch is running. Rest is paused at '+fmt(S.rest)+'.',
+    rest:'<b>Resting.</b> Rest stopwatch is running. Go back to study before it reaches 100:00:00.',
+    won:'<b>You won.</b> 100 hours of study finished first.',
+    lost:'<b>You lost.</b> 100 hours of rest finished first.'}[m];
   const b=$('btnMain'); b.classList.toggle('rest',m==='study');
   b.textContent=m==='idle'||m==='won'||m==='lost'?'Start':(m==='study'?'Pause study, start rest':'Resume study');
-  $('btnSleep').disabled=!active(); $('btnSleep').textContent=m==='sleep'?'Wake up':'Sleep';
   $('dot').style.background=col;
-  let t='--:--:--',l='Not started';
-  if(m==='study'){t=fmt(S.study);l='Studying · rest left '+fmt(rl)}
-  else if(m==='rest'){t=fmt(rl);l='Resting · rest left'}
-  else if(m==='sleep'){t=fmt(sl);l='Sleep left'}
-  else if(m==='won'){t=fmt(S.study);l='Goal reached'}
-  else if(m==='lost'){t=fmt(S.study);l='Window lost'}
-  $('cTime').textContent=t; $('cLbl').textContent=l;
-  const em={study:'🟢',rest:'🔴',sleep:'🔵',won:'🟢',lost:'🔴',idle:'⚪'}[m];
+  $('rowS').classList.toggle('on',m==='study'||m==='won');
+  $('rowR').classList.toggle('on',m==='rest'||m==='lost');
+  $('cStudy').textContent=fmt(S.study);
+  $('cRest').textContent=fmt(S.rest);
+  const em={study:'🟢',rest:'🔴',won:'🟢',lost:'🔴',idle:'⚪'}[m];
+  const t=m==='rest'||m==='lost'?fmt(S.rest):fmt(S.study);
   document.title=em+' '+t+' · Study Tracker';
   setFavicon(col);
 }
@@ -239,23 +251,20 @@ function showResult(){
   const r=$('result'), won=S.mode==='won';
   r.className='show '+(won?'win':'lose');
   $('resH').textContent=won?'You won':'You lost';
-  $('resP').textContent=won?'12 hours of study finished with '+fmt(restLeft())+' of rest still unused.'
-    :(S.why==='rest'?'Your 4 hours of rest ran out before you finished studying.':'The 24-hour window ended before you finished studying.');
-  $('resS').textContent=won?'Total time used: '+fmt(S.end-S.start)+' of 24:00:00.'
-    :'You studied '+fmt(S.study)+'. That is '+fmt(GOAL-S.study)+' short of 12:00:00.';
+  $('resP').textContent=won?'100 hours of study finished first, with '+fmt(GOAL-S.rest)+' of rest still unused.'
+    :'Your 100 hours of rest ran out first. You studied '+fmt(S.study)+', which is '+fmt(GOAL-S.study)+' short of 100:00:00.';
+  $('resS').textContent='Total time used: '+fmt(S.end-S.start)+' of 200:00:00.';
 }
 
 function keyHandler(e){
   if(e.ctrlKey||e.altKey||e.metaKey)return;
   const k=e.key.toLowerCase();
   if(e.code==='Space'){e.preventDefault();if(S.mode==='idle'||active())toggleStudy()}
-  else if(k==='s'&&!e.shiftKey){toggleSleep()}
   else if(k==='p'){popOut()}
   else if(k==='r'&&e.shiftKey){reset()}
 }
 document.addEventListener('keydown',keyHandler);
 $('btnMain').onclick=e=>{e.currentTarget.blur();toggleStudy()};
-$('btnSleep').onclick=e=>{e.currentTarget.blur();toggleSleep()};
 $('btnPip').onclick=popOut;
 $('btnReset').onclick=reset;
 $('btnAgain').onclick=start;
