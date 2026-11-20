@@ -66,7 +66,7 @@ kbd{background:var(--panel);border:1px solid var(--line);border-radius:4px;paddi
 </head>
 <body>
 <main>
-  <h1>100 hours of study vs 100 hours of rest <span style="font-size:14px">(rest runs 1.67x fast: 9h real = 15h shown)</span></h1>
+  <h1>100 hours of study vs 100 hours of rest</h1>
 
   <div class="watches">
     <section class="watch study" id="wStudy">
@@ -87,7 +87,7 @@ kbd{background:var(--panel);border:1px solid var(--line);border-radius:4px;paddi
 
   <div class="grid">
     <div class="stat"><div class="k">Total time used</div><div class="v num" id="used">00:00:00</div></div>
-    <div class="stat"><div class="k">Window time left (of 160h real time)</div><div class="v num" id="win">160:00:00</div></div>
+    <div class="stat"><div class="k">Window time left (of 200h)</div><div class="v num" id="win">200:00:00</div></div>
   </div>
 
   <div class="btns">
@@ -115,8 +115,6 @@ kbd{background:var(--panel);border:1px solid var(--line);border-radius:4px;paddi
 
 <script>
 const H=3600000, GOAL=100*H, KEY='studyTracker.v2';
-/* rest stopwatch runs faster: 9 real hours of rest shows as 15 hours (speed 15/9) */
-const RATE=15/9, WINDOW=GOAL+GOAL/RATE; /* longest possible window = 100h study + 60h real rest = 160h */
 const _c={};const $=id=>_c[id]||(_c[id]=document.getElementById(id));
 ['corner','dot','cStudy','cRest','rowS','rowR'].forEach($);
 const fresh=()=>({mode:'idle',start:0,last:0,study:0,rest:0,end:0});
@@ -129,10 +127,9 @@ function fmt(ms){ms=Math.max(0,Math.floor(ms/1000));return pad(Math.floor(ms/360
 /* add elapsed time to the running stopwatch; stop exactly when it hits 100h */
 function accrue(now){
   if(!active())return;
-  const r=S.mode==='rest'?RATE:1;
-  const dt=Math.max(0,now-S.last)*r;
+  const dt=Math.max(0,now-S.last);
   const room=GOAL-S[S.mode];
-  if(dt>=room){S[S.mode]=GOAL;S.last=S.last+room/r;finish(S.mode==='study'?'won':'lost',S.last);return}
+  if(dt>=room){S[S.mode]=GOAL;S.last=S.last+room;finish(S.mode==='study'?'won':'lost',S.last);return}
   S[S.mode]+=dt; S.last=now;
 }
 function tick(){
@@ -212,8 +209,8 @@ $('corner').addEventListener('click',()=>{
 const COL={study:'--g',rest:'--r',idle:'--idle',won:'--g',lost:'--r'};
 function render(){
   const m=S.mode, css=getComputedStyle(document.documentElement), col=css.getPropertyValue(COL[m]).trim();
-  const used=S.study+S.rest/RATE; /* real time used */
-  const winLeft=WINDOW-used;
+  const used=S.study+S.rest;
+  const winLeft=2*GOAL-used;
   $('study').textContent=fmt(S.study);
   $('rest').textContent=fmt(S.rest);
   $('studyLeft').textContent=fmt(GOAL-S.study)+' to go';
@@ -256,7 +253,7 @@ function showResult(){
   $('resH').textContent=won?'You won':'You lost';
   $('resP').textContent=won?'100 hours of study finished first, with '+fmt(GOAL-S.rest)+' of rest still unused.'
     :'Your 100 hours of rest ran out first. You studied '+fmt(S.study)+', which is '+fmt(GOAL-S.study)+' short of 100:00:00.';
-  $('resS').textContent='Total time used: '+fmt(S.end-S.start)+' of 160:00:00.';
+  $('resS').textContent='Total time used: '+fmt(S.end-S.start)+' of 200:00:00.';
 }
 
 function keyHandler(e){
