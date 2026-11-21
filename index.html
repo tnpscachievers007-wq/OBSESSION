@@ -8,87 +8,76 @@
 :root{--bg:#14181f;--panel:#1c222c;--line:#2c3441;--tx:#f1ece2;--mut:#98a2b3;--g:#34d27b;--r:#ff5a4f;--idle:#5b6575}
 *{box-sizing:border-box}
 html,body{margin:0;min-height:100%}
-body{background:var(--bg);color:var(--tx);font:16px/1.5 "Segoe UI",system-ui,sans-serif;padding:28px 20px 110px}
-main{max-width:900px;margin:0 auto}
+body{background:var(--bg);color:var(--tx);font:16px/1.5 "Segoe UI",system-ui,sans-serif;padding:28px 20px 120px}
+main{max-width:980px;margin:0 auto}
 h1{font-size:20px;font-weight:600;margin:0 0 22px;color:var(--mut)}
+h2{font-size:15px;font-weight:600;color:var(--mut);margin:30px 0 12px;text-transform:uppercase;letter-spacing:.06em}
 .num{font-variant-numeric:tabular-nums;font-feature-settings:"tnum"}
-.watches{display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:22px}
-.watch{background:var(--panel);border:2px solid var(--line);border-radius:14px;padding:18px 22px;transition:border-color .2s,opacity .2s;opacity:.65}
-.watch.on{opacity:1}
-.watch.study.on{border-color:var(--g)}
-.watch.rest.on{border-color:var(--r)}
+.watch{background:var(--panel);border:2px solid var(--line);border-radius:14px;padding:20px 26px;margin-bottom:18px;transition:border-color .2s,opacity .2s;opacity:.7}
+.watch.on{opacity:1;border-color:var(--g)}
 .watch .k{color:var(--mut);font-size:15px;display:flex;justify-content:space-between}
-.watch .big{font-size:clamp(34px,7.5vw,64px);font-weight:700;line-height:1.1;letter-spacing:-.02em;margin:4px 0}
-.watch.study .big{color:var(--g)}
-.watch.rest .big{color:var(--r)}
-.watch .sub{color:var(--mut);font-size:14px}
-.bar{height:8px;background:var(--line);border-radius:4px;overflow:hidden;margin:10px 0 6px}
-.bar i{display:block;height:100%;width:0}
-.watch.study .bar i{background:var(--g)}
-.watch.rest .bar i{background:var(--r)}
+.watch .big{font-size:clamp(44px,10vw,92px);font-weight:700;line-height:1.1;letter-spacing:-.02em;margin:6px 0;color:var(--g)}
+.watch .sub{color:var(--mut);font-size:15px}
+.bar{height:10px;background:var(--line);border-radius:5px;overflow:hidden;margin:12px 0 8px}
+.bar i{display:block;height:100%;width:0;background:var(--g)}
 .status{color:var(--mut);margin:0 0 20px;font-size:17px}
 .status b{color:var(--tx)}
-.grid{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:22px}
-.stat{background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:14px 16px}
-.stat .k{color:var(--mut);font-size:14px}
-.stat .v{font-size:26px;font-weight:600}
-.btns{display:flex;flex-wrap:wrap;gap:10px;margin-bottom:26px}
+.btns{display:flex;flex-wrap:wrap;gap:10px;margin-bottom:10px}
 button{font:inherit;color:var(--tx);background:var(--panel);border:1px solid var(--line);border-radius:8px;padding:11px 18px;cursor:pointer}
 button:hover{border-color:var(--mut)}
 button:focus-visible{outline:2px solid #7b8cff;outline-offset:2px}
 button.main{background:var(--g);border-color:var(--g);color:#06210f;font-weight:600}
-button.main.rest{background:var(--r);border-color:var(--r);color:#2a0805}
-.keys{color:var(--mut);font-size:14px;border-top:1px solid var(--line);padding-top:16px}
+button.main.pause{background:var(--r);border-color:var(--r);color:#2a0805}
+.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(210px,1fr));gap:12px}
+.stat{background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:12px 16px}
+.stat .k{color:var(--mut);font-size:13px}
+.stat .v{font-size:22px;font-weight:600}
+.stat .v.sm{font-size:17px;line-height:1.5;padding-top:3px}
+/* chart */
+.chart{background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:16px 14px 10px;display:flex;align-items:flex-end;gap:6px;height:200px}
+.col{flex:1;display:flex;flex-direction:column;justify-content:flex-end;align-items:center;height:100%;min-width:0}
+.col .val{font-size:11px;color:var(--mut);margin-bottom:3px;white-space:nowrap}
+.col .b{width:100%;max-width:44px;background:var(--g);border-radius:4px 4px 0 0;min-height:2px;opacity:.85}
+.col.today .b{opacity:1;box-shadow:0 0 0 2px rgba(52,210,123,.35)}
+.col .lab{font-size:11px;color:var(--mut);margin-top:6px;white-space:nowrap}
+/* sessions */
+table{width:100%;border-collapse:collapse;background:var(--panel);border:1px solid var(--line);border-radius:10px;overflow:hidden}
+th,td{padding:9px 14px;text-align:left;font-size:15px;border-bottom:1px solid var(--line)}
+th{color:var(--mut);font-weight:600;font-size:13px}
+tr:last-child td{border-bottom:0}
+.empty{color:var(--mut);padding:14px}
+.keys{color:var(--mut);font-size:14px;border-top:1px solid var(--line);padding-top:16px;margin-top:30px}
 .keys p{margin:4px 0}
 kbd{background:var(--panel);border:1px solid var(--line);border-radius:4px;padding:1px 7px;font:inherit;font-size:13px;color:var(--tx)}
 /* corner dot (also used inside the pop-out window) */
 .corner{position:fixed;right:16px;bottom:16px;display:flex;align-items:center;gap:14px;background:var(--panel);border:1px solid var(--line);border-radius:22px;padding:12px 22px 12px 16px;z-index:5;box-shadow:0 6px 24px rgba(0,0,0,.45);color:var(--tx);font-family:"Segoe UI",system-ui,sans-serif;cursor:pointer;user-select:none}
 .corner .dot{width:30px;height:30px;border-radius:50%;background:var(--idle);flex:none;box-shadow:0 0 0 4px rgba(255,255,255,.06)}
 .corner .rows{display:flex;flex-direction:column;gap:2px}
-.corner .row{display:flex;align-items:baseline;gap:10px;opacity:.5}
-.corner .row.on{opacity:1}
+.corner .row{display:flex;align-items:baseline;gap:10px}
 .corner .row .n{font-size:12px;color:var(--mut);width:42px}
-.corner .row .t{font-size:24px;font-weight:700;line-height:1.15}
-.corner #cStudy{color:var(--g)}
-.corner #cRest{color:var(--r)}
+.corner .row .t{font-size:26px;font-weight:700;line-height:1.15;color:var(--g)}
 .corner.pip{position:static;width:100vw;height:100vh;border:0;border-radius:0;box-shadow:none;justify-content:center}
 /* result */
 #result{position:fixed;inset:0;background:rgba(10,12,16,.92);display:none;align-items:center;justify-content:center;z-index:20;padding:20px}
 #result.show{display:flex}
 #result .box{max-width:460px;text-align:center}
-#result h2{font-size:clamp(40px,9vw,64px);margin:0 0 8px;line-height:1.05}
-#result.win h2{color:var(--g)}
-#result.lose h2{color:var(--r)}
+#result h2{font-size:clamp(40px,9vw,64px);margin:0 0 8px;line-height:1.05;color:var(--g);text-transform:none;letter-spacing:0}
 #result p{color:var(--mut);margin:6px 0}
 #result button{margin-top:18px}
-@media (max-width:620px){.watches{grid-template-columns:1fr}}
 </style>
 </head>
 <body>
 <main>
-  <h1>100 hours of study vs 100 hours of rest</h1>
+  <h1>100 hours of study</h1>
 
-  <div class="watches">
-    <section class="watch study" id="wStudy">
-      <div class="k"><span>Study stopwatch</span><span id="studyPct">0%</span></div>
-      <div class="big num" id="study">00:00:00</div>
-      <div class="bar"><i id="barStudy"></i></div>
-      <div class="sub num" id="studyLeft">100:00:00 to go</div>
-    </section>
-    <section class="watch rest" id="wRest">
-      <div class="k"><span>Rest stopwatch</span><span id="restPct">0%</span></div>
-      <div class="big num" id="rest">00:00:00</div>
-      <div class="bar"><i id="barRest"></i></div>
-      <div class="sub num" id="restLeft">100:00:00 left before you lose</div>
-    </section>
-  </div>
+  <section class="watch" id="watch">
+    <div class="k"><span>Study stopwatch</span><span id="pct">0%</span></div>
+    <div class="big num" id="study">00:00:00</div>
+    <div class="bar"><i id="bar"></i></div>
+    <div class="sub num" id="left">100:00:00 to go</div>
+  </section>
 
-  <p class="status" id="status">Press Start. Both stopwatches begin from zero.</p>
-
-  <div class="grid">
-    <div class="stat"><div class="k">Total time used</div><div class="v num" id="used">00:00:00</div></div>
-    <div class="stat"><div class="k">Window time left (of 200h)</div><div class="v num" id="win">200:00:00</div></div>
-  </div>
+  <p class="status" id="status">Press Start. The stopwatch begins from zero.</p>
 
   <div class="btns">
     <button class="main" id="btnMain">Start</button>
@@ -96,62 +85,119 @@ kbd{background:var(--panel);border:1px solid var(--line);border-radius:4px;paddi
     <button id="btnReset">Reset</button>
   </div>
 
+  <h2>Progress</h2>
+  <div class="grid">
+    <div class="stat"><div class="k">Total studied</div><div class="v num" id="sTotal">00:00:00</div></div>
+    <div class="stat"><div class="k">Hours left to win</div><div class="v num" id="sLeft">100:00:00</div></div>
+    <div class="stat"><div class="k">Progress</div><div class="v num" id="sPct">0.00%</div></div>
+    <div class="stat"><div class="k">Estimated finish date (at your pace)</div><div class="v sm" id="sEta">-</div></div>
+    <div class="stat"><div class="k">Started on</div><div class="v sm" id="sStart">-</div></div>
+    <div class="stat"><div class="k">Last studied</div><div class="v sm" id="sLast">-</div></div>
+  </div>
+
+  <h2>Daily</h2>
+  <div class="grid">
+    <div class="stat"><div class="k">Today</div><div class="v num" id="sToday">00:00:00</div></div>
+    <div class="stat"><div class="k">Yesterday</div><div class="v num" id="sYest">00:00:00</div></div>
+    <div class="stat"><div class="k">Last 7 days</div><div class="v num" id="s7">00:00:00</div></div>
+    <div class="stat"><div class="k">Last 30 days</div><div class="v num" id="s30">00:00:00</div></div>
+    <div class="stat"><div class="k">Days studied</div><div class="v num" id="sDays">0</div></div>
+    <div class="stat"><div class="k">Average per study day</div><div class="v num" id="sAvgStudyDay">00:00:00</div></div>
+    <div class="stat"><div class="k">Average per calendar day</div><div class="v num" id="sAvgCal">00:00:00</div></div>
+    <div class="stat"><div class="k">Best day</div><div class="v sm num" id="sBest">-</div></div>
+    <div class="stat"><div class="k">Current streak (days in a row)</div><div class="v num" id="sStreak">0</div></div>
+    <div class="stat"><div class="k">Longest streak</div><div class="v num" id="sStreakMax">0</div></div>
+  </div>
+
+  <h2>Sessions</h2>
+  <div class="grid">
+    <div class="stat"><div class="k">Number of sessions</div><div class="v num" id="sCount">0</div></div>
+    <div class="stat"><div class="k">Current session</div><div class="v num" id="sCur">00:00:00</div></div>
+    <div class="stat"><div class="k">Longest session</div><div class="v num" id="sLong">00:00:00</div></div>
+    <div class="stat"><div class="k">Shortest session</div><div class="v num" id="sShort">00:00:00</div></div>
+    <div class="stat"><div class="k">Average session</div><div class="v num" id="sAvgSes">00:00:00</div></div>
+    <div class="stat"><div class="k">Sessions per study day</div><div class="v num" id="sPerDay">0</div></div>
+  </div>
+
+  <h2>Time and focus</h2>
+  <div class="grid">
+    <div class="stat"><div class="k">Time since you started</div><div class="v num" id="sElapsed">00:00:00</div></div>
+    <div class="stat"><div class="k">Time paused / not studying</div><div class="v num" id="sBreak">00:00:00</div></div>
+    <div class="stat"><div class="k">Study share of that time</div><div class="v num" id="sFocus">0.0%</div></div>
+    <div class="stat"><div class="k">Needed per day to finish in 30 days</div><div class="v num" id="sNeed">-</div></div>
+  </div>
+
+  <h2>Last 14 days (hours studied)</h2>
+  <div class="chart" id="chart"></div>
+
+  <h2>Last 10 sessions</h2>
+  <div id="sesList"></div>
+
   <div class="keys">
-    <p>Rule: whichever stopwatch reaches 100 hours first decides it. Study reaches 100:00:00 first and you win. Rest reaches 100:00:00 first and you lose.</p>
-    <p><kbd>Space</kbd> start, then switch between study and rest &nbsp; <kbd>P</kbd> pop out dot &nbsp; <kbd>Shift</kbd>+<kbd>R</kbd> reset</p>
-    <p>Click the dot (corner or pop-out) to switch between study and rest. With another app in front, press your keyboard's <kbd>Play/Pause</kbd> media key to switch. This works after you press Start in this tab.</p>
+    <p>Rule: study for 100:00:00 in total and you win. Pause whenever you stop; only the time the stopwatch is running counts.</p>
+    <p><kbd>Space</kbd> start, then pause / resume &nbsp; <kbd>P</kbd> pop out dot &nbsp; <kbd>Shift</kbd>+<kbd>R</kbd> reset</p>
+    <p>Click the dot (corner or pop-out) to pause / resume. With another app in front, press your keyboard's <kbd>Play/Pause</kbd> media key to pause / resume. This works after you press Start in this tab.</p>
+    <p>If you close the page while the stopwatch is running, it keeps counting until you open it again and pause. Everything is saved in this browser.</p>
   </div>
 </main>
 
-<div class="corner" id="corner" title="Click to switch study / rest">
+<div class="corner" id="corner" title="Click to pause / resume">
   <span class="dot" id="dot"></span>
   <div class="rows">
-    <div class="row" id="rowS"><span class="n">Study</span><span class="t num" id="cStudy">00:00:00</span></div>
-    <div class="row" id="rowR"><span class="n">Rest</span><span class="t num" id="cRest">00:00:00</span></div>
+    <div class="row"><span class="n">Study</span><span class="t num" id="cStudy">00:00:00</span></div>
   </div>
 </div>
 
-<div id="result"><div class="box"><h2 id="resH"></h2><p id="resP"></p><p id="resS"></p><button class="main" id="btnAgain">Start a new window</button></div></div>
+<div id="result"><div class="box"><h2>You won</h2><p id="resP"></p><p id="resS"></p><button class="main" id="btnAgain">Start a new 100 hours</button></div></div>
 
 <script>
-const H=3600000, GOAL=100*H, KEY='studyTracker.v2';
+const H=3600000, DAY=86400000, GOAL=100*H, KEY='studyTracker.v3';
 const _c={};const $=id=>_c[id]||(_c[id]=document.getElementById(id));
-['corner','dot','cStudy','cRest','rowS','rowR'].forEach($);
-const fresh=()=>({mode:'idle',start:0,last:0,study:0,rest:0,end:0});
+['corner','dot','cStudy'].forEach($);
+/* mode: idle | study | paused | won.  sessions: [[startMs,endMs], ...] */
+const fresh=()=>({mode:'idle',start:0,last:0,study:0,end:0,sessions:[]});
 let S=(()=>{try{return Object.assign(fresh(),JSON.parse(localStorage.getItem(KEY)))}catch(e){return fresh()}})();
 const save=()=>{try{localStorage.setItem(KEY,JSON.stringify(S))}catch(e){}};
-const active=()=>S.mode==='study'||S.mode==='rest';
+const running=()=>S.mode==='study';
+const started=()=>S.mode!=='idle';
 const pad=n=>String(n).padStart(2,'0');
 function fmt(ms){ms=Math.max(0,Math.floor(ms/1000));return pad(Math.floor(ms/3600))+':'+pad(Math.floor(ms%3600/60))+':'+pad(ms%60)}
+const dStr=t=>new Date(t).toLocaleDateString(undefined,{weekday:'short',day:'numeric',month:'short',year:'numeric'});
+const tStr=t=>new Date(t).toLocaleTimeString([],{hour:'2-digit',minute:'2-digit'});
+const dayStart=t=>{const d=new Date(t);return new Date(d.getFullYear(),d.getMonth(),d.getDate()).getTime()};
+const nextDay=t=>{const d=new Date(t);return new Date(d.getFullYear(),d.getMonth(),d.getDate()+1).getTime()};
 
 /* add elapsed time to the running stopwatch; stop exactly when it hits 100h */
 function accrue(now){
-  if(!active())return;
+  if(!running())return;
   const dt=Math.max(0,now-S.last);
-  const room=GOAL-S[S.mode];
-  if(dt>=room){S[S.mode]=GOAL;S.last=S.last+room;finish(S.mode==='study'?'won':'lost',S.last);return}
-  S[S.mode]+=dt; S.last=now;
+  const room=GOAL-S.study;
+  const ses=S.sessions[S.sessions.length-1];
+  if(dt>=room){S.study=GOAL;S.last=S.last+room;if(ses)ses[1]=S.last;finish(S.last);return}
+  S.study+=dt; S.last=now; if(ses)ses[1]=now;
 }
 function tick(){
-  if(active()){accrue(Date.now());save()}
+  if(running()){accrue(Date.now());save()}
   render();
 }
-function finish(m,end){S.mode=m;S.end=end;save();showResult()}
-function setMode(m){
-  if(!active())return;
-  accrue(Date.now()); if(!active())return;
-  S.last=Date.now(); S.mode=m; save(); render(); audio&&audio.play().catch(()=>{});
+function finish(end){S.mode='won';S.end=end;save();showResult()}
+function resume(){
+  const now=Date.now(); S.mode='study'; S.last=now; S.sessions.push([now,now]); save(); render(); audio&&audio.play().catch(()=>{});
+}
+function pause(){
+  accrue(Date.now()); if(!running())return;
+  S.mode='paused'; save(); render(); audio&&audio.play().catch(()=>{});
 }
 function toggleStudy(){
-  if(S.mode==='idle')return start();
-  if(S.mode==='study')setMode('rest');
-  else if(S.mode==='rest')setMode('study');
+  if(S.mode==='idle'||S.mode==='won')return start();
+  if(S.mode==='study')pause();
+  else if(S.mode==='paused')resume();
 }
 function start(){
-  const now=Date.now(); S=fresh(); S.mode='study'; S.start=S.last=now; save();
+  const now=Date.now(); S=fresh(); S.mode='study'; S.start=S.last=now; S.sessions=[[now,now]]; save();
   $('result').classList.remove('show'); startAudio(); render();
 }
-function reset(){ if(confirm('Reset everything and clear the current window?')){S=fresh();save();$('result').classList.remove('show');render()} }
+function reset(){ if(confirm('Reset everything and delete all study history?')){S=fresh();save();$('result').classList.remove('show');render()} }
 
 /* media keys: work while another app is focused (needs a silent audio track playing in this tab) */
 let audio=null;
@@ -167,15 +213,15 @@ function startAudio(){
     if(!audio){audio=new Audio(silentWav());audio.loop=true;}
     audio.play().catch(()=>{});
     if('mediaSession' in navigator){
-      navigator.mediaSession.metadata=new MediaMetadata({title:'Study Tracker',artist:'Play/Pause = switch study and rest'});
-      const tg=()=>{if(active())toggleStudy();audio.play().catch(()=>{})};
+      navigator.mediaSession.metadata=new MediaMetadata({title:'Study Tracker',artist:'Play/Pause = pause or resume study'});
+      const tg=()=>{if(running()||S.mode==='paused')toggleStudy();audio.play().catch(()=>{})};
       navigator.mediaSession.setActionHandler('play',tg);
       navigator.mediaSession.setActionHandler('pause',tg);
       navigator.mediaSession.playbackState='playing';
     }
   }catch(e){}
 }
-document.addEventListener('click',()=>{if(active()&&!audio)startAudio()});
+document.addEventListener('click',()=>{if(running()&&!audio)startAudio()});
 
 /* pop-out always-on-top dot (Chrome / Edge); falls back to a small popup window */
 let pip=null, pipTimer=null;
@@ -183,9 +229,9 @@ async function popOut(){
   if(pip){pip.close();return}
   let w=null, why='';
   if('documentPictureInPicture' in window){
-    try{w=await documentPictureInPicture.requestWindow({width:340,height:130})}catch(e){why=e&&e.message||String(e)}
+    try{w=await documentPictureInPicture.requestWindow({width:340,height:110})}catch(e){why=e&&e.message||String(e)}
   }
-  if(!w){try{w=window.open('','studyDot','popup,width=340,height=130')}catch(e){}}
+  if(!w){try{w=window.open('','studyDot','popup,width=340,height=110')}catch(e){}}
   if(!w){alert('Could not open the pop-out.'+(why?' Reason: '+why:'')+' Allow pop-ups for this page and try again.');return}
   pip=w;
   const d=w.document;
@@ -201,45 +247,131 @@ async function popOut(){
   tick();
 }
 $('corner').addEventListener('click',()=>{
-  if(S.mode==='idle')start();
-  else if(active())toggleStudy();
+  if(S.mode==='idle'||S.mode==='won')start();
+  else toggleStudy();
 });
 
+/* ---------- statistics ---------- */
+/* split every session across calendar days -> {dayStartMs: msStudied} */
+function perDay(){
+  const m={};
+  for(const [a,b] of S.sessions){
+    let t=a;
+    while(t<b){
+      const ds=dayStart(t), nd=Math.min(nextDay(t),b);
+      m[ds]=(m[ds]||0)+(nd-t);
+      t=nd;
+    }
+  }
+  return m;
+}
+function sumDays(m,fromDay,toDay){let s=0;for(const k in m){const t=+k;if(t>=fromDay&&t<=toDay)s+=m[k]}return s}
+function streaks(m,today){
+  const days=Object.keys(m).map(Number).filter(k=>m[k]>=1000).sort((a,b)=>a-b);
+  let best=0,run=0,prev=null;
+  for(const d of days){
+    run=(prev!==null&&Math.round((d-prev)/DAY)===1)?run+1:1;
+    if(run>best)best=run; prev=d;
+  }
+  /* current streak: count back from today (or yesterday if nothing yet today) */
+  let cur=0,t=today;
+  if(!(m[t]>=1000)) t=dayStart(today-1);
+  while(m[t]>=1000){cur++;t=dayStart(t-1)}
+  return [cur,best];
+}
+function dayCount(startMs,now){ /* calendar days from start day to today, inclusive */
+  return Math.max(1,Math.round((dayStart(now)-dayStart(startMs))/DAY)+1);
+}
+
+let lastSec=-1;
+function renderStats(now){
+  const sec=Math.floor(now/1000); if(sec===lastSec)return; lastSec=sec;
+  const has=S.sessions.length>0;
+  const m=perDay(), today=dayStart(now);
+  const total=S.study, left=GOAL-S.study;
+  const lens=S.sessions.map(s=>s[1]-s[0]).filter(x=>x>=0);
+  const studyDays=Object.keys(m).filter(k=>m[k]>=1000).length;
+  const [sCur,sBest]=streaks(m,today);
+  const cal=has?dayCount(S.start,now):1;
+  const endRef=S.mode==='won'?S.end:now;
+  const elapsed=has?Math.max(0,endRef-S.start):0;
+
+  $('sTotal').textContent=fmt(total);
+  $('sLeft').textContent=fmt(left);
+  $('sPct').textContent=(total/GOAL*100).toFixed(2)+'%';
+  $('sStart').textContent=has?dStr(S.start)+', '+tStr(S.start):'-';
+  $('sLast').textContent=has?dStr(S.sessions[S.sessions.length-1][1])+', '+tStr(S.sessions[S.sessions.length-1][1]):'-';
+  if(S.mode==='won')$('sEta').textContent='Done';
+  else if(total>0){
+    const avg=total/cal, dl=Math.ceil(left/avg);
+    $('sEta').textContent=dStr(new Date(new Date(today).getFullYear(),new Date(today).getMonth(),new Date(today).getDate()+dl).getTime())+' (about '+dl+' day'+(dl===1?'':'s')+')';
+  } else $('sEta').textContent='-';
+
+  $('sToday').textContent=fmt(m[today]||0);
+  $('sYest').textContent=fmt(m[dayStart(today-1)]||0);
+  $('s7').textContent=fmt(sumDays(m,dayStart(today-6*DAY),today));
+  $('s30').textContent=fmt(sumDays(m,dayStart(today-29*DAY),today));
+  $('sDays').textContent=studyDays;
+  $('sAvgStudyDay').textContent=fmt(studyDays?total/studyDays:0);
+  $('sAvgCal').textContent=fmt(has?total/cal:0);
+  let bd=null;for(const k in m){if(bd===null||m[k]>m[bd])bd=k}
+  $('sBest').textContent=bd!==null?fmt(m[bd])+'  ('+dStr(+bd)+')':'-';
+  $('sStreak').textContent=sCur;
+  $('sStreakMax').textContent=sBest;
+
+  $('sCount').textContent=S.sessions.length;
+  $('sCur').textContent=running()?fmt(now-S.sessions[S.sessions.length-1][0]):'00:00:00';
+  $('sLong').textContent=fmt(lens.length?Math.max(...lens):0);
+  $('sShort').textContent=fmt(lens.length?Math.min(...lens):0);
+  $('sAvgSes').textContent=fmt(lens.length?lens.reduce((a,b)=>a+b,0)/lens.length:0);
+  $('sPerDay').textContent=studyDays?(S.sessions.length/studyDays).toFixed(1):'0';
+
+  $('sElapsed').textContent=fmt(elapsed);
+  $('sBreak').textContent=fmt(Math.max(0,elapsed-total));
+  $('sFocus').textContent=elapsed>0?(total/elapsed*100).toFixed(1)+'%':'0.0%';
+  $('sNeed').textContent=S.mode==='won'?'-':fmt(left/30)+' per day';
+
+  /* 14-day chart */
+  const days=[];for(let i=13;i>=0;i--)days.push(dayStart(today-i*DAY));
+  const vals=days.map(d=>m[d]||0), mx=Math.max(H,...vals);
+  $('chart').innerHTML=days.map((d,i)=>{
+    const dt=new Date(d), v=vals[i];
+    return '<div class="col'+(d===today?' today':'')+'" title="'+dStr(d)+': '+fmt(v)+'">'
+      +'<div class="val num">'+(v?(v/H).toFixed(1):'')+'</div>'
+      +'<div class="b" style="height:'+(v/mx*130)+'px"></div>'
+      +'<div class="lab">'+dt.getDate()+'/'+(dt.getMonth()+1)+'</div></div>';
+  }).join('');
+
+  /* last 10 sessions */
+  const last=S.sessions.slice(-10).reverse();
+  $('sesList').innerHTML=last.length
+    ?'<table><tr><th>Date</th><th>From - to</th><th>Studied</th></tr>'
+      +last.map(s=>'<tr><td>'+dStr(s[0])+'</td><td class="num">'+tStr(s[0])+' - '+tStr(s[1])+'</td><td class="num">'+fmt(s[1]-s[0])+'</td></tr>').join('')+'</table>'
+    :'<div class="empty">No sessions yet.</div>';
+}
+
 /* render */
-const COL={study:'--g',rest:'--r',idle:'--idle',won:'--g',lost:'--r'};
+const COL={study:'--g',paused:'--r',idle:'--idle',won:'--g'};
 function render(){
   const m=S.mode, css=getComputedStyle(document.documentElement), col=css.getPropertyValue(COL[m]).trim();
-  const used=S.study+S.rest;
-  const winLeft=2*GOAL-used;
   $('study').textContent=fmt(S.study);
-  $('rest').textContent=fmt(S.rest);
-  $('studyLeft').textContent=fmt(GOAL-S.study)+' to go';
-  $('restLeft').textContent=fmt(GOAL-S.rest)+' left before you lose';
-  $('barStudy').style.width=Math.min(100,S.study/GOAL*100)+'%';
-  $('barRest').style.width=Math.min(100,S.rest/GOAL*100)+'%';
-  $('studyPct').textContent=(S.study/GOAL*100).toFixed(1)+'%';
-  $('restPct').textContent=(S.rest/GOAL*100).toFixed(1)+'%';
-  $('wStudy').classList.toggle('on',m==='study'||m==='won');
-  $('wRest').classList.toggle('on',m==='rest'||m==='lost');
-  $('used').textContent=fmt(used);
-  $('win').textContent=fmt(winLeft);
+  $('left').textContent=fmt(GOAL-S.study)+' to go';
+  $('bar').style.width=Math.min(100,S.study/GOAL*100)+'%';
+  $('pct').textContent=(S.study/GOAL*100).toFixed(1)+'%';
+  $('watch').classList.toggle('on',m==='study'||m==='won');
   $('status').innerHTML={
-    idle:'Press Start. Both stopwatches begin from zero.',
-    study:'<b>Studying.</b> Study stopwatch is running. Rest is paused at '+fmt(S.rest)+'.',
-    rest:'<b>Resting.</b> Rest stopwatch is running. Go back to study before it reaches 100:00:00.',
-    won:'<b>You won.</b> 100 hours of study finished first.',
-    lost:'<b>You lost.</b> 100 hours of rest finished first.'}[m];
-  const b=$('btnMain'); b.classList.toggle('rest',m==='study');
-  b.textContent=m==='idle'||m==='won'||m==='lost'?'Start':(m==='study'?'Pause study, start rest':'Resume study');
+    idle:'Press Start. The stopwatch begins from zero.',
+    study:'<b>Studying.</b> The stopwatch is running.',
+    paused:'<b>Paused.</b> Press Resume when you start studying again.',
+    won:'<b>You won.</b> 100 hours of study finished.'}[m];
+  const b=$('btnMain'); b.classList.toggle('pause',m==='study');
+  b.textContent=m==='idle'||m==='won'?'Start':(m==='study'?'Pause':'Resume studying');
   $('dot').style.background=col;
-  $('rowS').classList.toggle('on',m==='study'||m==='won');
-  $('rowR').classList.toggle('on',m==='rest'||m==='lost');
   $('cStudy').textContent=fmt(S.study);
-  $('cRest').textContent=fmt(S.rest);
-  const em={study:'🟢',rest:'🔴',won:'🟢',lost:'🔴',idle:'⚪'}[m];
-  const t=m==='rest'||m==='lost'?fmt(S.rest):fmt(S.study);
-  document.title=em+' '+t+' · Study Tracker';
+  const em={study:'🟢',paused:'🔴',won:'🟢',idle:'⚪'}[m];
+  document.title=em+' '+fmt(S.study)+' · Study Tracker';
   setFavicon(col);
+  renderStats(Date.now());
 }
 let lastFav='';
 function setFavicon(c){
@@ -248,18 +380,15 @@ function setFavicon(c){
   l.href='data:image/svg+xml,'+encodeURIComponent('<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32"><circle cx="16" cy="16" r="13" fill="'+c+'"/></svg>');
 }
 function showResult(){
-  const r=$('result'), won=S.mode==='won';
-  r.className='show '+(won?'win':'lose');
-  $('resH').textContent=won?'You won':'You lost';
-  $('resP').textContent=won?'100 hours of study finished first, with '+fmt(GOAL-S.rest)+' of rest still unused.'
-    :'Your 100 hours of rest ran out first. You studied '+fmt(S.study)+', which is '+fmt(GOAL-S.study)+' short of 100:00:00.';
-  $('resS').textContent='Total time used: '+fmt(S.end-S.start)+' of 200:00:00.';
+  $('result').className='show';
+  $('resP').textContent='You studied 100:00:00 in '+S.sessions.length+' session'+(S.sessions.length===1?'':'s')+'.';
+  $('resS').textContent='From start to finish: '+fmt(S.end-S.start)+'.';
 }
 
 function keyHandler(e){
   if(e.ctrlKey||e.altKey||e.metaKey)return;
   const k=e.key.toLowerCase();
-  if(e.code==='Space'){e.preventDefault();if(S.mode==='idle'||active())toggleStudy()}
+  if(e.code==='Space'){e.preventDefault();if(S.mode!=='won')toggleStudy()}
   else if(k==='p'){popOut()}
   else if(k==='r'&&e.shiftKey){reset()}
 }
@@ -268,7 +397,7 @@ $('btnMain').onclick=e=>{e.currentTarget.blur();toggleStudy()};
 $('btnPip').onclick=popOut;
 $('btnReset').onclick=reset;
 $('btnAgain').onclick=start;
-if(S.mode==='won'||S.mode==='lost')showResult();
+if(S.mode==='won')showResult();
 setInterval(tick,250); tick();
 </script>
 </body>
