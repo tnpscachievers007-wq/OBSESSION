@@ -146,7 +146,10 @@ kbd{background:var(--panel);border:1px solid var(--line);border-radius:4px;paddi
   <div class="btns">
     <button class="main" id="btnMain">Start</button>
     <button id="btnPip">Pop out dot</button>
+    <button id="btnAp">Auto pause: Off</button>
+    <button id="btnApRe" style="display:none">Retake empty picture</button>
     <button id="btnReset">Reset</button>
+    <div class="hint" id="apInfo" style="flex-basis:100%;margin:0;display:none"></div>
   </div>
 
   <nav class="tabs" id="tabs">
@@ -185,6 +188,7 @@ kbd{background:var(--panel);border:1px solid var(--line);border-radius:4px;paddi
 
   <div class="keys">
     <p>Rule: study for 100:00:00 in total and you win. Pause whenever you stop; only the time the stopwatch is running counts.</p>
+    <p>Auto pause: press <b>Auto pause</b> and allow the camera. Step out of the camera view for 5 seconds so it can take a picture of the empty room, then come back. After that it pauses when you leave and resumes when you return. Only the top half of the camera picture is watched, so your body can be half visible and looking down is fine. The camera picture never leaves this page.</p>
     <p><kbd>Space</kbd> start, then pause / resume &nbsp; <kbd>P</kbd> pop out dot &nbsp; <kbd>Shift</kbd>+<kbd>R</kbd> reset</p>
     <p>Click the dot (corner or pop-out) to pause / resume. With another app in front, press your keyboard's <kbd>Play/Pause</kbd> media key to pause / resume. This works after you press Start in this tab.</p>
     <p>If you close the page while the stopwatch is running, it keeps counting until you open it again and pause. Everything is saved in this browser. Hover or tap any bar, cell or point in the statistics to see details.</p>
@@ -235,7 +239,7 @@ function accrue(now){
   if(dt>=room){S.study=GOAL;S.last=S.last+room;if(ses)ses[1]=S.last;finish(S.last);return}
   S.study+=dt; S.last=now; if(ses)ses[1]=now;
 }
-function tick(){ if(running()){accrue(Date.now());save()} render(); }
+function tick(){ if(running()){accrue(Date.now());save()} apStep(); render(); }
 function finish(end){S.mode='won';S.end=end;save();showResult()}
 function resume(){const now=Date.now();S.mode='study';S.last=now;S.sessions.push([now,now]);save();render();audio&&audio.play().catch(()=>{})}
 function pause(){accrue(Date.now());if(!running())return;S.mode='paused';save();render();audio&&audio.play().catch(()=>{})}
@@ -660,6 +664,79 @@ function showTip(e){
 document.addEventListener('pointermove',showTip);
 document.addEventListener('pointerdown',showTip);
 document.addEventListener('pointerleave',()=>{$('tip').style.display='none'});
+
+/* ---------- camera auto pause ---------- */
+/* Watches the TOP part of the camera picture. It learns the empty room first.
+   When something big (your body) is in view the stopwatch runs. When you leave, it pauses. */
+const AP_GRACE=2000;   /* ms you may be out of view before it pauses */
+const AP_MIN=6;        /* percent of the watched area that must change to count as "you are here" */
+const AP_THR=35;       /* how different a pixel must be from the empty picture */
+const AP_TOP=0.5;      /* watch only this top part of the picture (0.5 = top half) */
+const AP_SETUP=5000;   /* ms you get to step out of view at the start */
+const AP_W=80, AP_H=45;
+const AP={on:false,stream:null,video:null,ctx:null,state:'off',end:0,frames:[],bg:null,seen:0,pct:0,auto:false};
+
+function apInfo(t){const e=$('apInfo');e.textContent=t;e.style.display=t?'block':'none'}
+function apGray(){
+  const v=AP.video; if(!v||v.readyState<2||!v.videoWidth)return null;
+  AP.ctx.drawImage(v,0,0,AP_W,AP_H);
+  const rows=Math.max(1,Math.floor(AP_H*AP_TOP)), d=AP.ctx.getImageData(0,0,AP_W,rows).data, g=new Float32Array(AP_W*rows);
+  for(let i=0,j=0;j<g.length;i+=4,j++)g[j]=0.299*d[i]+0.587*d[i+1]+0.114*d[i+2];
+  return g;
+}
+function apSetup(){
+  AP.state='countdown'; AP.end=Date.now()+AP_SETUP; AP.frames=[]; AP.seen=0; AP.bg=null;
+  if(running()){pause(); if(S.mode==='paused')AP.auto=true}   /* no counting while you step out; it resumes when you return */
+}
+function apStep(){
+  if(!AP.on)return;
+  const now=Date.now(), g=apGray(); if(!g)return;
+  if(AP.state==='countdown'){
+    apInfo('Camera: step OUT of the camera view now... '+Math.max(1,Math.ceil((AP.end-now)/1000)));
+    if(now>=AP.end){AP.state='capturing';AP.end=now+1500;AP.frames=[]}
+  }else if(AP.state==='capturing'){
+    apInfo('Camera: taking the empty picture. Stay out of view...');
+    AP.frames.push(g);
+    if(now>=AP.end&&AP.frames.length){
+      const n=AP.frames.length, bg=new Float32Array(g.length);
+      for(const f of AP.frames)for(let i=0;i<bg.length;i++)bg[i]+=f[i]/n;
+      AP.bg=bg; AP.frames=[]; AP.state='watching'; AP.seen=0;
+    }
+  }else if(AP.state==='watching'){
+    let c=0; for(let i=0;i<g.length;i++)if(Math.abs(g[i]-AP.bg[i])>AP_THR)c++;
+    AP.pct=100*c/g.length;
+    if(AP.pct>=AP_MIN)AP.seen=now;
+    const present=AP.seen>0&&now-AP.seen<=AP_GRACE;
+    if(S.mode!=='paused')AP.auto=false;
+    if(S.mode==='study'&&!present){pause(); if(S.mode==='paused')AP.auto=true}
+    else if(S.mode==='paused'&&present&&AP.auto){AP.auto=false;resume()}
+    apInfo('Camera: '+(present?'you are in view.':'you are out of view.')+'  Picture change '+AP.pct.toFixed(1)+'%');
+  }
+}
+async function apOn(){
+  if(!navigator.mediaDevices||!navigator.mediaDevices.getUserMedia){apInfo('This browser cannot use the camera for this page.');return}
+  let stream;
+  try{stream=await navigator.mediaDevices.getUserMedia({video:{width:{ideal:320},height:{ideal:180}},audio:false})}
+  catch(e){apInfo('Could not open the camera: '+(e&&e.message||e)+'. Allow the camera and try again.');return}
+  const v=document.createElement('video');
+  v.muted=true; v.playsInline=true; v.srcObject=stream;
+  v.style.cssText='position:fixed;left:0;top:0;width:2px;height:2px;opacity:0;pointer-events:none';
+  document.body.appendChild(v);
+  try{await v.play()}catch(e){}
+  const cv=document.createElement('canvas'); cv.width=AP_W; cv.height=AP_H;
+  AP.ctx=cv.getContext('2d',{willReadFrequently:true});
+  AP.stream=stream; AP.video=v; AP.on=true; AP.auto=false;
+  $('btnAp').textContent='Auto pause: On'; $('btnApRe').style.display='';
+  apSetup();
+}
+function apOff(){
+  if(AP.stream)AP.stream.getTracks().forEach(t=>t.stop());
+  if(AP.video)AP.video.remove();
+  AP.on=false; AP.stream=null; AP.video=null; AP.state='off'; AP.auto=false;
+  $('btnAp').textContent='Auto pause: Off'; $('btnApRe').style.display='none'; apInfo('');
+}
+$('btnAp').onclick=e=>{e.currentTarget.blur(); AP.on?apOff():apOn()};
+$('btnApRe').onclick=e=>{e.currentTarget.blur(); if(AP.on)apSetup()};
 
 if(S.mode==='won')showResult();
 setInterval(tick,250); tick();
