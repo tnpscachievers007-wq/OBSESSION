@@ -110,6 +110,9 @@ th{color:var(--mut);font-weight:600;font-size:12.5px;user-select:none}
 th[data-sort]{cursor:pointer}
 th[data-sort]:hover{color:var(--tx)}
 tr:last-child td{border-bottom:0}
+.del{padding:3px 10px;font-size:13px;color:var(--r);border-color:var(--line);background:none}
+.del:hover{background:var(--r);color:#2a0805;border-color:var(--r)}
+.live{color:var(--mut);font-size:13px}
 td .mb{display:inline-block;height:8px;background:var(--g);border-radius:4px;vertical-align:middle;opacity:.85}
 .keys{color:var(--mut);font-size:14px;border-top:1px solid var(--line);padding-top:16px;margin-top:30px}
 .keys p{margin:4px 0}
@@ -248,6 +251,21 @@ function toggleStudy(){
   if(S.mode==='study')pause(); else if(S.mode==='paused')resume();
 }
 function start(){const now=Date.now();S=fresh();S.mode='study';S.start=S.last=now;S.sessions=[[now,now]];save();$('result').classList.remove('show');startAudio();sig='';render()}
+function delSession(idx){
+  const s=S.sessions[idx]; if(!s)return;
+  if(running()&&idx===S.sessions.length-1)return;
+  if(running())accrue(Date.now());
+  const len=s[1]-s[0];
+  if(!confirm('Delete this session?\n\n'+dStr(s[0])+'\n'+tStr(s[0])+' - '+tStr(s[1])+'  ('+fmt(len)+')\n\nThis time will be taken off your total.'))return;
+  S.sessions.splice(idx,1);
+  S.study=Math.max(0,S.study-len);
+  if(!S.sessions.length){S=fresh()}
+  else{
+    S.start=S.sessions[0][0];
+    if(S.mode==='won'&&S.study<GOAL){S.mode='paused';S.end=0;S.last=Date.now();$('result').classList.remove('show')}
+  }
+  save();sig='';render();
+}
 function reset(){if(confirm('Reset everything and delete all study history?')){S=fresh();save();$('result').classList.remove('show');sig='';render()}}
 
 /* media keys */
@@ -563,8 +581,8 @@ function rSessions(D){
   rows.sort((x,y)=>(key[ui.sort](x)-key[ui.sort](y))*ui.dir);
   const shown=ui.all?rows:rows.slice(0,25), mx=Math.max(...lens);
   const arrow=k=>ui.sort===k?(ui.dir>0?' ▲':' ▼'):'';
-  const tbl='<div class="tw"><table><tr><th data-sort="n">#'+arrow('n')+'</th><th data-sort="date">Date'+arrow('date')+'</th><th>From - to</th><th data-sort="len">Length'+arrow('len')+'</th><th></th></tr>'
-    +shown.map(x=>'<tr><td class="num">'+x.i+'</td><td>'+dStr(x.a)+'</td><td class="num">'+tStr(x.a)+' - '+tStr(x.b)+'</td><td class="num">'+fmt(x.len)+'</td><td><span class="mb" style="width:'+Math.max(3,x.len/mx*140)+'px"></span></td></tr>').join('')+'</table></div>'
+  const tbl='<div class="tw"><table><tr><th data-sort="n">#'+arrow('n')+'</th><th data-sort="date">Date'+arrow('date')+'</th><th>From - to</th><th data-sort="len">Length'+arrow('len')+'</th><th></th><th></th></tr>'
+    +shown.map(x=>'<tr><td class="num">'+x.i+'</td><td>'+dStr(x.a)+'</td><td class="num">'+tStr(x.a)+' - '+tStr(x.b)+'</td><td class="num">'+fmt(x.len)+'</td><td><span class="mb" style="width:'+Math.max(3,x.len/mx*140)+'px"></span></td><td>'+(running()&&x.i===S.sessions.length?'<span class="live">Running now</span>':'<button class="del" data-del="'+(x.i-1)+'">Delete</button>')+'</td></tr>').join('')+'</table></div>'
     +(rows.length>shown.length?'<p class="hint">Showing 25 of '+rows.length+' sessions.</p>':'');
   $('btnAll').textContent=ui.all?'Show only 25 rows':'Show all rows';
   return card('Session summary',kp,rangeName(D.range))+card('How long are your sessions?',bb)+card('All sessions','<p class="hint" style="margin:0 0 8px">Click a column heading to sort.</p>'+tbl);
@@ -647,6 +665,8 @@ $('minLen').value=String(ui.minLen);
 document.addEventListener('click',e=>{
   const d=e.target.closest&&e.target.closest('[data-day]');
   if(d&&!d.classList.contains('fut')){ui.sel=+d.dataset.day;saveUi();sig='';render();return}
+  const del=e.target.closest&&e.target.closest('[data-del]');
+  if(del){delSession(+del.dataset.del);return}
   const th=e.target.closest&&e.target.closest('th[data-sort]');
   if(th){const k=th.dataset.sort;if(ui.sort===k)ui.dir*=-1;else{ui.sort=k;ui.dir=-1}saveUi();sig='';render()}
 });
