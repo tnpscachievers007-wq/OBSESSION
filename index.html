@@ -181,12 +181,15 @@ kbd{background:var(--panel);border:1px solid var(--line);border-radius:4px;paddi
     <div class="chipx">Best stretch<b class="num" id="sBest">00:00:00</b></div>
     <div class="chipx">Today<b id="sToday">0m</b></div>
     <div class="chipx">Day streak<b id="sStreak">0</b></div>
-    <div class="chipx">Level<b id="sLvl">1</b></div>
+    <div class="chipx">Level today<b id="sLvl">1</b></div>
+    <div class="chipx">XP today<b id="sXp">0</b></div>
   </div>
   <div class="now"><span id="nowTxt"></span><button id="nowBtn" class="main">Done</button></div>
+  <div class="now" id="qLineBox" style="cursor:pointer;border-color:var(--amber)"><span id="qLine"></span></div>
   <p class="nxt" id="sNext"></p>
 
   <nav class="tabs" id="tabs">
+    <button data-tab="quests">Quests</button>
     <button data-tab="focus">Focus</button>
     <button data-tab="overview">Overview</button>
     <button data-tab="hours">Hours of the day</button>
@@ -199,9 +202,16 @@ kbd{background:var(--panel);border:1px solid var(--line);border-radius:4px;paddi
     <button data-range="7">7 days</button><button data-range="30">30 days</button><button data-range="90">90 days</button><button data-range="0">All time</button>
   </div>
 
+  <section class="panel" id="p-quests">
+    <div class="card"><div class="ch"><h3>Your quest</h3><span id="qXp"></span></div>
+      <div id="qTxt" style="font-size:20px;margin:8px 0 14px"></div>
+      <div class="fbar"><i id="qBar" style="width:0"></i></div>
+      <div class="hint num" id="qNum"></div>
+      <div class="frow" style="margin:14px 0 0"><button class="main" id="qDone">I did it</button><button id="qSkip">Skip quest</button></div></div>
+    <div id="qDyn"></div>
+  </section>
   <section class="panel" id="p-focus">
-    <div id="fTop"></div>
-    <div class="card"><div class="ch"><h3>Tasks for this sitting</h3><span>Each task done gives 15 XP</span></div>
+        <div class="card"><div class="ch"><h3>Tasks for this sitting</h3><span>Each task done gives 15 XP</span></div>
       <div class="frow"><input class="fin" id="tIn" type="text" maxlength="120" placeholder="What will you finish? Example: Tamil grammar unit 3"><button class="main" id="tAdd">Add task</button></div>
       <div id="fTasks"></div><div class="frow" style="margin:10px 0 0"><button id="tClr">Clear done tasks</button></div></div>
     <div class="card"><div class="ch"><h3>Rewards I promised myself</h3><span>Unlocks by total study hours</span></div>
@@ -258,10 +268,10 @@ const _c={};const $=id=>_c[id]||(_c[id]=document.getElementById(id));
 const fresh=()=>({mode:'idle',start:0,last:0,study:0,end:0,sessions:[]});
 let S=(()=>{try{return Object.assign(fresh(),JSON.parse(localStorage.getItem(KEY)))}catch(e){return fresh()}})();
 const save=()=>{try{localStorage.setItem(KEY,JSON.stringify(S))}catch(e){}};
-let ui=(()=>{const d={tab:'focus',range:30,sort:'date',dir:-1,minLen:0,all:false,sel:null,perDay:4};try{return Object.assign(d,JSON.parse(localStorage.getItem(UIKEY)))}catch(e){return d}})();
+let ui=(()=>{const d={tab:'quests',range:30,sort:'date',dir:-1,minLen:0,all:false,sel:null,perDay:4};try{return Object.assign(d,JSON.parse(localStorage.getItem(UIKEY)))}catch(e){return d}})();
 const saveUi=()=>{try{localStorage.setItem(UIKEY,JSON.stringify(ui))}catch(e){}};
 const FKEY='studyTracker.focus';
-let F=(()=>{const d={tasks:[],done:0,rewards:[],goal:4,seen:null,v:0,nid:1};try{return Object.assign(d,JSON.parse(localStorage.getItem(FKEY)))}catch(e){return d}})();
+let F=(()=>{const d={tasks:[],done:0,added:0,rewards:[],goal:4,seen:null,v:0,nid:1,bx:{},qd:{},qt:0,q:null,qlog:[],rec:{},rf:{}};try{return Object.assign(d,JSON.parse(localStorage.getItem(FKEY)))}catch(e){return d}})();
 const saveF=()=>{F.v++;try{localStorage.setItem(FKEY,JSON.stringify(F))}catch(e){}};
 const running=()=>S.mode==='study';
 const pad=n=>String(n).padStart(2,'0');
@@ -646,7 +656,7 @@ function renderPanels(now){
   document.querySelectorAll('#tabs button').forEach(b=>b.classList.toggle('on',b.dataset.tab===t));
   document.querySelectorAll('#chips [data-range]').forEach(b=>b.classList.toggle('on',+b.dataset.range===ui.range));
   $('chips').style.display=(t==='hours'||t==='days'||t==='sessions')?'flex':'none';
-  ['focus','overview','hours','days','cal','trend','sessions'].forEach(n=>$('p-'+n).classList.toggle('on',n===t));
+  ['quests','focus','overview','hours','days','cal','trend','sessions'].forEach(n=>$('p-'+n).classList.toggle('on',n===t));
   const rangeTabs=t==='hours'||t==='days'||t==='sessions';
   const D=compute(now,rangeTabs?ui.range:0);
   const fn={overview:rOverview,hours:rHours,days:rDays,cal:rCal,trend:rTrend,sessions:rSessions}[t];
@@ -704,24 +714,63 @@ $('btnPip').onclick=popOut;
 $('btnReset').onclick=reset;
 $('btnAgain').onclick=start;
 
-/* ---------- focus: stretches, xp, tasks, rewards, badges ---------- */
-const STRETCH=[30,60,120,180,240], BIGH=[1,5,10,25,50,75,100], STREAK_MIN=30*60000;
+/* ---------- quests, records, xp, tasks, rewards, badges ---------- */
+const STRETCH=[30,60,120,180,240], BIGH=[1,5,10,25,50,75,100], STREAK_MIN=30*60000, REC_XP=25;
 const LN=['Beginner','Warming up','Steady','Focused','Deep sitter','Iron seat','Marathon','Master','Legend','Unstoppable'];
+const MAN=['Drink a glass of water, then come back to your seat','Sit straight and relax your shoulders','Take five slow deep breaths','Look far away for 20 seconds, then look back at your book','Say out loud what you will finish next','Write one thing you just learned'];
 const stName=m=>m<60?m+' minute':(m/60)+' hour';
-let fSig='';
+let fSig='', lastW=0;
+const saveQ=()=>{lastW=Date.now();try{localStorage.setItem(FKEY,JSON.stringify(F))}catch(e){}};
+const addXp=(n,t)=>{const k=dayStart(t||Date.now());F.bx[k]=Math.max(0,(F.bx[k]||0)+n)};
+const xpOf=st=>Math.floor(st.today/60000)+(F.bx[st.t0]||0);
+const lvlOf=x=>Math.floor(Math.sqrt(x/20))+1;
+const lvlName=L=>LN[Math.min(L-1,9)];
+const lastStart=()=>S.sessions.length?S.sessions[S.sessions.length-1][0]:Date.now();
+const maxQd=()=>Math.max(0,...Object.values(F.qd));
 function fStats(now){
-  const t0=dayStart(now), days={}; let best=0,cur=0,tb=0;
+  const t0=dayStart(now), days={}; let best=0,cur=0,tb=0,mx=0;
   S.sessions.forEach(([a,b],i)=>{
     best=Math.max(best,b-a); if(running()&&i===S.sessions.length-1)cur=b-a;
     for(let d=dayStart(a);d<b;d=addDays(d,1)){const o=Math.min(b,addDays(d,1))-Math.max(a,d);if(o>0){days[d]=(days[d]||0)+o;if(d===t0)tb=Math.max(tb,o)}}
   });
+  for(const k in days)mx=Math.max(mx,days[k]);
   let streak=0,d=t0; if((days[d]||0)<STREAK_MIN)d=addDays(d,-1);
   while((days[d]||0)>=STREAK_MIN){streak++;d=addDays(d,-1)}
-  return {today:days[t0]||0,best,cur,streak,tb,t0};
+  const tpd={};F.tasks.forEach(x=>{if(x.done&&x.dt){const k=dayStart(x.dt);tpd[k]=(tpd[k]||0)+1}});
+  let tmx=0;for(const k in tpd)tmx=Math.max(tmx,tpd[k]);
+  return {today:days[t0]||0,best,cur,streak,tb,t0,mx,tt:tpd[t0]||0,tmx};
+}
+const RECS=[
+  {k:'stretch',n:'Longest stretch',v:st=>st.best,w:st=>st.cur,f:fmtHM},
+  {k:'day',n:'Most study in one day',v:st=>st.mx,w:st=>st.today,f:fmtHM},
+  {k:'streak',n:'Longest day streak',v:st=>st.streak,w:st=>st.streak,f:v=>v+(v===1?' day':' days')},
+  {k:'tasks',n:'Most tasks in one day',v:st=>st.tmx,w:st=>st.tt,f:v=>String(v)},
+  {k:'quests',n:'Most quests in one day',v:()=>maxQd(),w:st=>F.qd[st.t0]||0,f:v=>String(v)},
+  {k:'xp',n:'Highest XP in one day',v:st=>xpOf(st),w:st=>xpOf(st),f:v=>v+' XP'},
+  {k:'lvl',n:'Highest level in one day',v:st=>lvlOf(xpOf(st)),w:st=>lvlOf(xpOf(st)),f:v=>'Level '+v}
+];
+const rd=n=>Math.floor(Math.random()*n);
+const QT={
+  sit:{pool:[3,5,8,10,15,20,30],txt:q=>'Study for '+q.n+' minutes',need:q=>q.n*6e4,xp:q=>5+q.n,prog:q=>S.study-q.sb,t:1},
+  str:{pool:[5,10,15,20,30,45,60],txt:q=>'Sit for '+q.n+' minutes in one stretch, without pausing',need:q=>q.n*6e4,xp:q=>10+q.n,prog:(q,c)=>running()?c.now-Math.max(q.at,lastStart()):0,t:1},
+  td:{pool:[1,2],txt:q=>'Finish '+q.n+(q.n>1?' tasks':' task')+' from your list',need:q=>q.n,xp:q=>10+10*q.n,prog:q=>F.done-q.db},
+  ta:{pool:[1],txt:()=>'Add one new task to your list',need:()=>1,xp:()=>5,prog:q=>F.added-q.ab},
+  man:{pool:MAN.map((_,i)=>i),txt:q=>MAN[q.n],need:()=>1,xp:()=>8,prog:q=>q.m?1:0,man:1},
+  rec:{pool:[0],txt:q=>'Beat your longest stretch of '+fmtHM(q.tg),need:q=>q.tg,xp:()=>40,prog:(q,c)=>running()?c.now-lastStart():0,t:1}
+};
+function newQuest(prev){
+  const ty=['sit','str','ta','man'].concat(F.tasks.some(x=>!x.done)?['td']:[],(F.rec.stretch>0&&F.rec.stretch<4*H)?['rec']:[]).filter(t=>!prev||t!==prev.y);
+  const y=ty[rd(ty.length)], pl=QT[y].pool;
+  return {y,n:pl[rd(pl.length)],at:Date.now(),sb:S.study,db:F.done,ab:F.added,m:0,tg:y==='rec'?F.rec.stretch+1000:0};
 }
 function nextMile(st){
-  st=st||fStats(Date.now()); const c=[];
-  if(running())STRETCH.forEach(m=>{if(st.cur<m*60000)c.push({gap:m*60000-st.cur,label:'your '+stName(m)+' stretch badge'})});
+  st=st||fStats(Date.now()); const c=[], now=Date.now();
+  if(running()){
+    STRETCH.forEach(m=>{if(st.cur<m*6e4)c.push({gap:m*6e4-st.cur,label:'your '+stName(m)+' stretch badge'})});
+    if(F.rec.stretch>st.cur)c.push({gap:F.rec.stretch-st.cur+1000,label:'a new longest stretch record'});
+    if(F.rec.day>st.today)c.push({gap:F.rec.day-st.today+1000,label:'a new record for study in one day'});
+    if(F.q){const T=QT[F.q.y];if(T.t)c.push({gap:T.need(F.q)-T.prog(F.q,{now}),label:'your quest'})}
+  }
   if(F.goal&&st.today<F.goal*H)c.push({gap:F.goal*H-st.today,label:'your daily goal of '+F.goal+' hours'});
   F.rewards.forEach(r=>{if(S.study<r.h*H)c.push({gap:r.h*H-S.study,label:'your reward: '+r.t})});
   BIGH.forEach(h=>{if(S.study<h*H)c.push({gap:h*H-S.study,label:'the '+h+' hour badge'})});
@@ -730,9 +779,10 @@ function nextMile(st){
 function badgeList(st){
   const b=[];
   BIGH.forEach(h=>b.push({id:'h'+h,t:h+(h===1?' hour':' hours'),s:'total study',ok:S.study>=h*H}));
-  STRETCH.forEach(m=>b.push({id:'s'+m,t:stName(m)+' stretch',s:'without pausing',ok:st.best>=m*60000}));
+  STRETCH.forEach(m=>b.push({id:'s'+m,t:stName(m)+' stretch',s:'without pausing',ok:st.best>=m*6e4}));
   [3,7,14,30].forEach(n=>b.push({id:'d'+n,t:n+' day streak',s:'30+ minutes a day',ok:st.streak>=n}));
   [5,25,100].forEach(n=>b.push({id:'t'+n,t:n+' tasks',s:'finished',ok:F.done>=n}));
+  [10,50,200].forEach(n=>b.push({id:'q'+n,t:n+' quests',s:'finished',ok:F.qt>=n}));
   return b;
 }
 function toast(m){const e=$('toast');e.textContent=m;e.classList.add('show');clearTimeout(toast.t);toast.t=setTimeout(()=>e.classList.remove('show'),4500)}
@@ -742,51 +792,85 @@ function celebrate(m){
   const cl=['#34d27b','#f5c542','#6ea8ff','#ff5a4f','#f1ece2'];
   for(let i=0;i<40;i++){const d=document.createElement('div');d.className='cf';d.style.left=Math.random()*100+'vw';d.style.background=cl[i%5];d.style.animationDelay=Math.random()*.6+'s';document.body.appendChild(d);setTimeout(()=>d.remove(),3200)}
 }
-function addTask(){const v=$('tIn').value.trim();if(!v)return;F.tasks.push({id:F.nid++,t:v,done:false,dt:0});$('tIn').value='';saveF();focusTick(true)}
+function addTask(){const v=$('tIn').value.trim();if(!v)return;F.tasks.push({id:F.nid++,t:v,done:false,dt:0});F.added++;$('tIn').value='';saveF();focusTick(true)}
 function addReward(){const h=parseFloat($('rH').value),t=$('rT').value.trim();if(!(h>0)||!t)return;F.rewards.push({id:F.nid++,h,t});$('rH').value='';$('rT').value='';saveF();focusTick(true)}
 function taskToggle(id){
   const t=F.tasks.find(x=>x.id===id);if(!t)return;
-  if(t.done){t.done=false;t.dt=0;F.done=Math.max(0,F.done-1)}
-  else{t.done=true;t.dt=Date.now();F.done++;celebrate('Task done. +15 XP')}
+  if(t.done){addXp(-15,t.dt);t.done=false;t.dt=0;F.done=Math.max(0,F.done-1)}
+  else{t.done=true;t.dt=Date.now();F.done++;addXp(15);celebrate('Task done. +15 XP')}
   saveF();focusTick(true);
 }
 function focusTick(force){
-  const now=Date.now(), st=fStats(now);
-  const xp=Math.floor(S.study/60000)+F.done*15, L=Math.floor(Math.sqrt(xp/30))+1;
+  const now=Date.now(), st=fStats(now); let ch=false, full=false;
+  if(!focusTick.p){focusTick.p=1;for(const k in F.bx)if(+k<st.t0-60*DAY)delete F.bx[k]}
+  const first=F.seen===null; if(first){F.seen={};full=true}
+  // badges and rewards
+  const mark=(id,msg)=>{if(!F.seen[id]){F.seen[id]=1;full=true;if(!first)celebrate(msg)}};
+  badgeList(st).forEach(b=>{if(b.ok)mark(b.id,'Badge unlocked: '+b.t+' '+b.s)});
+  F.rewards.forEach(r=>{if(S.study>=r.h*H)mark('r'+r.id,'Reward unlocked: '+r.t)});
+  if(F.goal&&st.today>=F.goal*H)mark('g'+st.t0,'Daily goal done. '+F.goal+' hours today');
+  // quest
+  if(!F.q){F.q=newQuest(null);full=true}
+  let q=F.q, T=QT[q.y];
+  if(S.study<q.sb)q.sb=S.study;
+  let need=T.need(q), pr=Math.max(0,Math.min(need,T.prog(q,{now})));
+  if(pr>=need){
+    const xq=T.xp(q);
+    addXp(xq);F.qd[st.t0]=(F.qd[st.t0]||0)+1;F.qt++;
+    F.qlog.unshift({t:T.txt(q),xp:xq,at:now});F.qlog.length=Math.min(F.qlog.length,8);
+    celebrate('Quest done: '+T.txt(q)+'. +'+xq+' XP');
+    F.q=newQuest(q);q=F.q;T=QT[q.y];need=T.need(q);pr=0;full=true;
+  }
+  // records
+  const msgs=[];
+  RECS.forEach(r=>{
+    const v=r.v(st),old=F.rec[r.k]||0;
+    if(v>old){F.rec[r.k]=v;ch=true;
+      if(!first&&old>0&&F.rf[r.k]!==st.t0){F.rf[r.k]=st.t0;addXp(REC_XP);full=true;msgs.push(r.n+' is now '+r.f(v))}}
+  });
+  if(msgs.length)celebrate('New record: '+msgs.join('. ')+'. +'+REC_XP*msgs.length+' XP');
+  const xp=xpOf(st), L=lvlOf(xp);
+  // strip
   $('sCur').textContent=fmt(running()?st.cur:0);
   $('sBest').textContent=fmt(st.best);
   $('sToday').textContent=fmtHM(st.today)+(F.goal?' / '+F.goal+'h':'');
   $('sStreak').textContent=st.streak+(st.streak===1?' day':' days');
-  $('sLvl').textContent=L+' '+LN[Math.min(L-1,9)];
+  $('sLvl').textContent=L+' '+lvlName(L);
+  $('sXp').textContent=xp;
   const n=nextMile(st);
   $('sNext').textContent=n?'Next: '+n.label+' in '+fmtHM(n.gap):(running()?'Keep going.':'Press Start to begin a stretch.');
   const t=F.tasks.find(x=>!x.done);
   $('nowTxt').textContent=t?'Now working on: '+t.t:'No task set. Open the Focus tab and add one.';
   $('nowBtn').style.display=t?'':'none'; if(t)$('nowBtn').dataset.tk=t.id;
-  // unlocks
-  const first=F.seen===null; if(first)F.seen={}; let ch=first;
-  const mark=(id,msg)=>{if(!F.seen[id]){F.seen[id]=1;ch=true;if(!first)celebrate(msg)}};
-  badgeList(st).forEach(b=>{if(b.ok)mark(b.id,'Badge unlocked: '+b.t+' '+b.s)});
-  F.rewards.forEach(r=>{if(S.study>=r.h*H)mark('r'+r.id,'Reward unlocked: '+r.t)});
-  if(F.goal&&st.today>=F.goal*H)mark('g'+st.t0,'Daily goal done. '+F.goal+' hours today');
-  if(ch)saveF();
-  if(ui.tab==='focus'){const g=[F.v,Math.floor(now/60000),S.mode,S.sessions.length].join('|');if(force||g!==fSig){fSig=g;renderFocus(st,xp,L)}}
+  // quest display
+  const prTxt=T.man?(running()?'Do it, then press the button.':'Start the stopwatch first, then press the button.'):(T.t?fmt(pr)+' of '+fmt(need):pr+' of '+need);
+  $('qTxt').textContent=T.txt(q);
+  $('qBar').style.width=(pr/need*100)+'%';
+  $('qXp').textContent='+'+T.xp(q)+' XP';
+  $('qNum').textContent=prTxt;
+  $('qDone').style.display=T.man?'':'none';
+  $('qLine').textContent='Quest: '+T.txt(q)+(T.man?'':'  ('+prTxt+')')+'  +'+T.xp(q)+' XP';
+  if(full)saveF(); else if(ch&&now-lastW>5000)saveQ();
+  const tb=ui.tab;
+  if(tb==='focus'||tb==='quests'){
+    const g=[F.v,tb,Math.floor(now/(tb==='quests'?5000:60000)),S.mode,S.sessions.length].join('|');
+    if(force||g!==fSig){fSig=g;tb==='focus'?renderFocus(st):renderQuests(st,xp,L)}
+  }
 }
-function renderFocus(st,xp,L){
-  const lo=30*(L-1)*(L-1), hi=30*L*L, bar=(p)=>'<div class="fbar"><i style="width:'+Math.min(100,p)+'%"></i></div>';
-  const q=(lab,val,p)=>'<div class="fq"><div class="r"><span>'+lab+'</span><span>'+(p>=100?'Done':val)+'</span></div>'+bar(p)+'</div>';
-  const todayTasks=F.tasks.filter(x=>x.done&&x.dt>=st.t0).length;
-  $('fTop').innerHTML=
-    card('Level '+L+': '+LN[Math.min(L-1,9)],bar((xp-lo)/(hi-lo)*100)+'<div class="hint">'+xp+' XP. Next level at '+hi+' XP. You get 1 XP for every minute you sit, and 15 XP for every task you finish.</div>')+
-    card("Today's quests",
-      q('Sit '+(F.goal||1)+' hours today',fmtHM(st.today)+' of '+(F.goal||1)+'h',st.today/((F.goal||1)*H)*100)+
-      q('One stretch of 45 minutes without pausing',fmtHM(st.tb)+' of 45m',st.tb/(45*60000)*100)+
-      q('Finish 3 tasks today',todayTasks+' of 3',todayTasks/3*100));
+function renderQuests(st,xp,L){
+  const bar=p=>'<div class="fbar"><i style="width:'+Math.min(100,Math.max(0,p))+'%"></i></div>';
+  const lo=20*(L-1)*(L-1), hi=20*L*L, qd=F.qd[st.t0]||0;
+  let h=card('Level '+L+': '+lvlName(L),bar((xp-lo)/(hi-lo)*100)+'<div class="hint">'+xp+' XP today. Next level at '+hi+' XP. Your level starts again from 1 every morning.</div><div class="hint">Today you finished '+qd+(qd===1?' quest':' quests')+' and '+st.tt+(st.tt===1?' task':' tasks')+'. You get 1 XP for every minute of study, 15 XP for every task, and extra XP for every quest.</div>');
+  h+=card('Records',RECS.map(r=>{const rv=F.rec[r.k]||0,nv=r.w(st);return '<div class="fq"><div class="r"><span>'+r.n+'</span><span>Record '+r.f(rv)+'. Now '+r.f(nv)+'</span></div>'+bar(rv?nv/rv*100:0)+'</div>'}).join('')+'<div class="hint">Break a record and you get +'+REC_XP+' XP. Each record can pay once a day.</div>');
+  h+=card('Recent quests',F.qlog.length?F.qlog.map(x=>'<div class="task"><span>'+esc(x.t)+'</span><small style="color:var(--mut)">+'+x.xp+' XP at '+tStr(x.at)+'</small></div>').join(''):'<div class="hint">No quest finished yet. Your first quest is waiting above.</div>',F.qt+' finished in total');
+  $('qDyn').innerHTML=h;
+}
+function renderFocus(st){
   const ts=F.tasks.slice().sort((a,b)=>a.done-b.done);
   $('fTasks').innerHTML=ts.map(x=>'<div class="task'+(x.done?' done':'')+'"><button data-tk="'+x.id+'">'+(x.done?'Undo':'Done')+'</button><span>'+esc(x.t)+'</span><button class="del" data-tdel="'+x.id+'">Remove</button></div>').join('')||'<div class="hint">No tasks yet. Add what you will finish while you sit.</div>';
   $('fRew').innerHTML=F.rewards.slice().sort((a,b)=>a.h-b.h).map(r=>{const ok=S.study>=r.h*H;return '<div class="task"><span>'+(ok?'Unlocked. ':'')+'At '+r.h+' hours: '+esc(r.t)+(ok?'':' <small style="color:var(--mut)">('+fmtHM(r.h*H-S.study)+' to go)</small>')+'</span><button class="del" data-rdel="'+r.id+'">Remove</button></div>'}).join('')||'<div class="hint">Promise yourself something nice at an hour mark. Seeing it locked helps you stay.</div>';
-  const bl=badgeList(st), got=bl.filter(b=>b.ok||F.seen&&F.seen[b.id]).length;
-  $('fBadges').innerHTML=card('Badges','<div class="fgrid">'+bl.map(b=>'<div class="bdg'+(b.ok||F.seen&&F.seen[b.id]?' on':'')+'"><b>'+b.t+'</b>'+b.s+'</div>').join('')+'</div>',got+' of '+bl.length);
+  const bl=badgeList(st), on=b=>b.ok||(F.seen&&F.seen[b.id]), got=bl.filter(on).length;
+  $('fBadges').innerHTML=card('Badges','<div class="fgrid">'+bl.map(b=>'<div class="bdg'+(on(b)?' on':'')+'"><b>'+b.t+'</b>'+b.s+'</div>').join('')+'</div>',got+' of '+bl.length);
 }
 $('gSel').innerHTML=[1,2,3,4,5,6,8,10,12].map(h=>'<option value="'+h+'">'+h+'</option>').join('');
 $('gSel').value=F.goal;
@@ -802,6 +886,9 @@ document.addEventListener('click',e=>{
   else if(e.target.id==='tAdd')addTask();
   else if(e.target.id==='rAdd')addReward();
   else if(e.target.id==='tClr'){F.tasks=F.tasks.filter(x=>!x.done);saveF();focusTick(true)}
+  else if(e.target.id==='qSkip'){F.q=newQuest(F.q);saveF();focusTick(true)}
+  else if(e.target.id==='qDone'){if(running()){F.q.m=1;focusTick(true)}else toast('Start the stopwatch first.')}
+  else if(e.target.closest&&e.target.closest('#qLineBox')){ui.tab='quests';saveUi();sig='';render()}
 });
 window.addEventListener('beforeunload',e=>{if(running()){e.preventDefault();e.returnValue=''}});
 $('tabs').onclick=e=>{const b=e.target.closest('[data-tab]');if(b){ui.tab=b.dataset.tab;saveUi();sig='';render()}};
