@@ -184,7 +184,7 @@ kbd{background:var(--panel);border:1px solid var(--line);border-radius:4px;paddi
     <div class="chipx">Level today<b id="sLvl">1</b></div>
     <div class="chipx">XP today<b id="sXp">0</b></div>
   </div>
-  <div class="now"><span id="nowTxt"></span><button id="nowBtn" class="main">Done</button></div>
+  <div class="now"><span id="nowTxt"></span></div>
   <div class="now" id="qLineBox" style="cursor:pointer;border-color:var(--amber)"><span id="qLine"></span></div>
   <p class="nxt" id="sNext"></p>
 
@@ -207,12 +207,12 @@ kbd{background:var(--panel);border:1px solid var(--line);border-radius:4px;paddi
       <div id="qTxt" style="font-size:20px;margin:8px 0 14px"></div>
       <div class="fbar"><i id="qBar" style="width:0"></i></div>
       <div class="hint num" id="qNum"></div>
-      <div class="frow" style="margin:14px 0 0"><button class="main" id="qDone">I did it</button><button id="qSkip">Skip quest</button></div></div>
+      <div class="frow" style="margin:14px 0 0"><button id="qSkip">Skip quest</button></div></div>
     <div id="qDyn"></div>
   </section>
   <section class="panel" id="p-focus">
-        <div class="card"><div class="ch"><h3>Tasks for this sitting</h3><span>Each task done gives 15 XP</span></div>
-      <div class="frow"><input class="fin" id="tIn" type="text" maxlength="120" placeholder="What will you finish? Example: Tamil grammar unit 3"><button class="main" id="tAdd">Add task</button></div>
+        <div class="card"><div class="ch"><h3>Tasks for this sitting</h3><span>A task finishes by itself when you have sat for its minutes. 15 XP each.</span></div>
+      <div class="frow"><input class="fin" id="tIn" type="text" maxlength="120" placeholder="Task. Example: Tamil grammar unit 3"><input class="fin" id="tM" type="number" min="1" max="600" step="5" value="30" title="Minutes of sitting" style="flex:0 1 90px"><button class="main" id="tAdd">Add task</button></div>
       <div id="fTasks"></div><div class="frow" style="margin:10px 0 0"><button id="tClr">Clear done tasks</button></div></div>
     <div class="card"><div class="ch"><h3>Rewards I promised myself</h3><span>Unlocks by total study hours</span></div>
       <div class="frow"><input class="fin" id="rH" type="number" min="0.5" max="100" step="0.5" placeholder="At hours" style="flex:0 1 110px"><input class="fin" id="rT" type="text" maxlength="80" placeholder="Reward. Example: Watch a movie"><button class="main" id="rAdd">Add reward</button></div>
@@ -751,17 +751,16 @@ const RECS=[
 ];
 const rd=n=>Math.floor(Math.random()*n);
 const QT={
-  sit:{pool:[3,5,8,10,15,20,30],txt:q=>'Study for '+q.n+' minutes',need:q=>q.n*6e4,xp:q=>5+q.n,prog:q=>S.study-q.sb,t:1},
-  str:{pool:[5,10,15,20,30,45,60],txt:q=>'Sit for '+q.n+' minutes in one stretch, without pausing',need:q=>q.n*6e4,xp:q=>10+q.n,prog:(q,c)=>running()?c.now-Math.max(q.at,lastStart()):0,t:1},
-  td:{pool:[1,2],txt:q=>'Finish '+q.n+(q.n>1?' tasks':' task')+' from your list',need:q=>q.n,xp:q=>10+10*q.n,prog:q=>F.done-q.db},
-  ta:{pool:[1],txt:()=>'Add one new task to your list',need:()=>1,xp:()=>5,prog:q=>F.added-q.ab},
-  man:{pool:MAN.map((_,i)=>i),txt:q=>MAN[q.n],need:()=>1,xp:()=>8,prog:q=>q.m?1:0,man:1},
+  sit:{pool:[2,3,5,8,10,12,15,20,25,30,40,45],txt:q=>'Study for '+q.n+' minutes',need:q=>q.n*6e4,xp:q=>5+q.n,prog:q=>S.study-q.sb,t:1},
+  str:{pool:[5,10,15,20,25,30,40,45,60,90],txt:q=>'Sit for '+q.n+' minutes in one stretch, without pausing',need:q=>q.n*6e4,xp:q=>10+q.n,prog:(q,c)=>running()?c.now-Math.max(q.at,lastStart()):0,t:1},
+  tk:{pool:[0],txt:q=>'Sit until your task is finished: '+q.nm,need:q=>q.tg,xp:q=>10+Math.min(30,Math.round(q.tg/12e4)),prog:q=>S.study-q.sb,t:1},
   rec:{pool:[0],txt:q=>'Beat your longest stretch of '+fmtHM(q.tg),need:q=>q.tg,xp:()=>40,prog:(q,c)=>running()?c.now-lastStart():0,t:1}
 };
 function newQuest(prev){
-  const ty=['sit','str','ta','man'].concat(F.tasks.some(x=>!x.done)?['td']:[],(F.rec.stretch>0&&F.rec.stretch<4*H)?['rec']:[]).filter(t=>!prev||t!==prev.y);
+  const act=F.tasks.find(x=>!x.done), left=act?(act.min||30)*6e4-(act.spent||0):0;
+  const ty=['sit','str'].concat(left>=6e4?['tk']:[],(F.rec.stretch>0&&F.rec.stretch<4*H)?['rec']:[]).filter(t=>!prev||t!==prev.y);
   const y=ty[rd(ty.length)], pl=QT[y].pool;
-  return {y,n:pl[rd(pl.length)],at:Date.now(),sb:S.study,db:F.done,ab:F.added,m:0,tg:y==='rec'?F.rec.stretch+1000:0};
+  return {y,n:pl[rd(pl.length)],at:Date.now(),sb:S.study,nm:y==='tk'?act.t:'',m:0,tg:y==='rec'?F.rec.stretch+1000:(y==='tk'?left:0)};
 }
 function nextMile(st){
   st=st||fStats(Date.now()); const c=[], now=Date.now();
@@ -769,7 +768,8 @@ function nextMile(st){
     STRETCH.forEach(m=>{if(st.cur<m*6e4)c.push({gap:m*6e4-st.cur,label:'your '+stName(m)+' stretch badge'})});
     if(F.rec.stretch>st.cur)c.push({gap:F.rec.stretch-st.cur+1000,label:'a new longest stretch record'});
     if(F.rec.day>st.today)c.push({gap:F.rec.day-st.today+1000,label:'a new record for study in one day'});
-    if(F.q){const T=QT[F.q.y];if(T.t)c.push({gap:T.need(F.q)-T.prog(F.q,{now}),label:'your quest'})}
+    if(F.q&&QT[F.q.y]){const T=QT[F.q.y];if(T.t)c.push({gap:T.need(F.q)-T.prog(F.q,{now}),label:'your quest'})}
+    const at=F.tasks.find(x=>!x.done);if(at)c.push({gap:(at.min||30)*6e4-(at.spent||0),label:'finishing your task'});
   }
   if(F.goal&&st.today<F.goal*H)c.push({gap:F.goal*H-st.today,label:'your daily goal of '+F.goal+' hours'});
   F.rewards.forEach(r=>{if(S.study<r.h*H)c.push({gap:r.h*H-S.study,label:'your reward: '+r.t})});
@@ -792,14 +792,8 @@ function celebrate(m){
   const cl=['#34d27b','#f5c542','#6ea8ff','#ff5a4f','#f1ece2'];
   for(let i=0;i<40;i++){const d=document.createElement('div');d.className='cf';d.style.left=Math.random()*100+'vw';d.style.background=cl[i%5];d.style.animationDelay=Math.random()*.6+'s';document.body.appendChild(d);setTimeout(()=>d.remove(),3200)}
 }
-function addTask(){const v=$('tIn').value.trim();if(!v)return;F.tasks.push({id:F.nid++,t:v,done:false,dt:0});F.added++;$('tIn').value='';saveF();focusTick(true)}
+function addTask(){const v=$('tIn').value.trim();if(!v)return;const m=Math.max(1,Math.min(600,parseInt($('tM').value)||30));F.tasks.push({id:F.nid++,t:v,min:m,spent:0,done:false,dt:0});F.added++;$('tIn').value='';saveF();focusTick(true)}
 function addReward(){const h=parseFloat($('rH').value),t=$('rT').value.trim();if(!(h>0)||!t)return;F.rewards.push({id:F.nid++,h,t});$('rH').value='';$('rT').value='';saveF();focusTick(true)}
-function taskToggle(id){
-  const t=F.tasks.find(x=>x.id===id);if(!t)return;
-  if(t.done){addXp(-15,t.dt);t.done=false;t.dt=0;F.done=Math.max(0,F.done-1)}
-  else{t.done=true;t.dt=Date.now();F.done++;addXp(15);celebrate('Task done. +15 XP')}
-  saveF();focusTick(true);
-}
 function focusTick(force){
   const now=Date.now(), st=fStats(now); let ch=false, full=false;
   if(!focusTick.p){focusTick.p=1;for(const k in F.bx)if(+k<st.t0-60*DAY)delete F.bx[k]}
@@ -809,8 +803,19 @@ function focusTick(force){
   badgeList(st).forEach(b=>{if(b.ok)mark(b.id,'Badge unlocked: '+b.t+' '+b.s)});
   F.rewards.forEach(r=>{if(S.study>=r.h*H)mark('r'+r.id,'Reward unlocked: '+r.t)});
   if(F.goal&&st.today>=F.goal*H)mark('g'+st.t0,'Daily goal done. '+F.goal+' hours today');
+  // task time: only sitting time counts
+  if(typeof F.ls!=='number'||S.study<F.ls)F.ls=S.study;
+  let rest=S.study-F.ls; F.ls=S.study; const fin=[];
+  if(rest>0)ch=true;
+  while(rest>0){
+    const at=F.tasks.find(x=>!x.done); if(!at)break;
+    const nd=(at.min||30)*6e4, room=nd-(at.spent||0);
+    if(rest>=room){at.spent=nd;at.done=true;at.dt=now;F.done++;addXp(15);full=true;fin.push(at.t);rest-=room}
+    else{at.spent=(at.spent||0)+rest;rest=0}
+  }
+  if(fin.length)celebrate('Task finished: '+fin.join(', ')+'. +'+15*fin.length+' XP');
   // quest
-  if(!F.q){F.q=newQuest(null);full=true}
+  if(!F.q||!QT[F.q.y]){F.q=newQuest(null);full=true}
   let q=F.q, T=QT[q.y];
   if(S.study<q.sb)q.sb=S.study;
   let need=T.need(q), pr=Math.max(0,Math.min(need,T.prog(q,{now})));
@@ -840,15 +845,13 @@ function focusTick(force){
   const n=nextMile(st);
   $('sNext').textContent=n?'Next: '+n.label+' in '+fmtHM(n.gap):(running()?'Keep going.':'Press Start to begin a stretch.');
   const t=F.tasks.find(x=>!x.done);
-  $('nowTxt').textContent=t?'Now working on: '+t.t:'No task set. Open the Focus tab and add one.';
-  $('nowBtn').style.display=t?'':'none'; if(t)$('nowBtn').dataset.tk=t.id;
+  $('nowTxt').textContent=t?'Now working on: '+t.t+' ('+fmt(t.spent||0)+' of '+fmt((t.min||30)*6e4)+')':'No task set. Open the Focus tab and add one.';
   // quest display
   const prTxt=T.man?(running()?'Do it, then press the button.':'Start the stopwatch first, then press the button.'):(T.t?fmt(pr)+' of '+fmt(need):pr+' of '+need);
   $('qTxt').textContent=T.txt(q);
   $('qBar').style.width=(pr/need*100)+'%';
   $('qXp').textContent='+'+T.xp(q)+' XP';
   $('qNum').textContent=prTxt;
-  $('qDone').style.display=T.man?'':'none';
   $('qLine').textContent='Quest: '+T.txt(q)+(T.man?'':'  ('+prTxt+')')+'  +'+T.xp(q)+' XP';
   if(full)saveF(); else if(ch&&now-lastW>5000)saveQ();
   const tb=ui.tab;
@@ -860,14 +863,15 @@ function focusTick(force){
 function renderQuests(st,xp,L){
   const bar=p=>'<div class="fbar"><i style="width:'+Math.min(100,Math.max(0,p))+'%"></i></div>';
   const lo=20*(L-1)*(L-1), hi=20*L*L, qd=F.qd[st.t0]||0;
-  let h=card('Level '+L+': '+lvlName(L),bar((xp-lo)/(hi-lo)*100)+'<div class="hint">'+xp+' XP today. Next level at '+hi+' XP. Your level starts again from 1 every morning.</div><div class="hint">Today you finished '+qd+(qd===1?' quest':' quests')+' and '+st.tt+(st.tt===1?' task':' tasks')+'. You get 1 XP for every minute of study, 15 XP for every task, and extra XP for every quest.</div>');
+  let h=card('Level '+L+': '+lvlName(L),bar((xp-lo)/(hi-lo)*100)+'<div class="hint">'+xp+' XP today. Next level at '+hi+' XP. Your level starts again from 1 every morning.</div><div class="hint">Today you finished '+qd+(qd===1?' quest':' quests')+' and '+st.tt+(st.tt===1?' task':' tasks')+'. You get 1 XP for every minute of study, 15 XP when you finish the sitting time of a task, and extra XP for every quest.</div>');
   h+=card('Records',RECS.map(r=>{const rv=F.rec[r.k]||0,nv=r.w(st);return '<div class="fq"><div class="r"><span>'+r.n+'</span><span>Record '+r.f(rv)+'. Now '+r.f(nv)+'</span></div>'+bar(rv?nv/rv*100:0)+'</div>'}).join('')+'<div class="hint">Break a record and you get +'+REC_XP+' XP. Each record can pay once a day.</div>');
   h+=card('Recent quests',F.qlog.length?F.qlog.map(x=>'<div class="task"><span>'+esc(x.t)+'</span><small style="color:var(--mut)">+'+x.xp+' XP at '+tStr(x.at)+'</small></div>').join(''):'<div class="hint">No quest finished yet. Your first quest is waiting above.</div>',F.qt+' finished in total');
   $('qDyn').innerHTML=h;
 }
 function renderFocus(st){
   const ts=F.tasks.slice().sort((a,b)=>a.done-b.done);
-  $('fTasks').innerHTML=ts.map(x=>'<div class="task'+(x.done?' done':'')+'"><button data-tk="'+x.id+'">'+(x.done?'Undo':'Done')+'</button><span>'+esc(x.t)+'</span><button class="del" data-tdel="'+x.id+'">Remove</button></div>').join('')||'<div class="hint">No tasks yet. Add what you will finish while you sit.</div>';
+  const act=F.tasks.find(x=>!x.done);
+  $('fTasks').innerHTML=ts.map(x=>{const nd=(x.min||30)*6e4,sp=x.done?nd:Math.min(nd,x.spent||0);return '<div class="task'+(x.done?' done':'')+'"><span>'+esc(x.t)+'<div class="fbar" style="margin-top:6px"><i style="width:'+(sp/nd*100)+'%"></i></div></span><small style="color:var(--mut)">'+(x.done?'Done':(x===act?'Now: ':'')+fmtHM(nd-sp)+' left')+'</small><button class="del" data-tdel="'+x.id+'">Remove</button></div>'}).join('')||'<div class="hint">No tasks yet. Add a task and the minutes you will sit for it.</div>';
   $('fRew').innerHTML=F.rewards.slice().sort((a,b)=>a.h-b.h).map(r=>{const ok=S.study>=r.h*H;return '<div class="task"><span>'+(ok?'Unlocked. ':'')+'At '+r.h+' hours: '+esc(r.t)+(ok?'':' <small style="color:var(--mut)">('+fmtHM(r.h*H-S.study)+' to go)</small>')+'</span><button class="del" data-rdel="'+r.id+'">Remove</button></div>'}).join('')||'<div class="hint">Promise yourself something nice at an hour mark. Seeing it locked helps you stay.</div>';
   const bl=badgeList(st), on=b=>b.ok||(F.seen&&F.seen[b.id]), got=bl.filter(on).length;
   $('fBadges').innerHTML=card('Badges','<div class="fgrid">'+bl.map(b=>'<div class="bdg'+(on(b)?' on':'')+'"><b>'+b.t+'</b>'+b.s+'</div>').join('')+'</div>',got+' of '+bl.length);
@@ -880,14 +884,12 @@ $('rT').onkeydown=e=>{if(e.key==='Enter')addReward()};
 document.addEventListener('click',e=>{
   const g=a=>e.target.closest&&e.target.closest('['+a+']'); let b;
   if(e.target.tagName==='BUTTON')e.target.blur();
-  if(b=g('data-tk')){taskToggle(+b.dataset.tk)}
-  else if(b=g('data-tdel')){F.tasks=F.tasks.filter(x=>x.id!==+b.dataset.tdel);saveF();focusTick(true)}
+  if(b=g('data-tdel')){F.tasks=F.tasks.filter(x=>x.id!==+b.dataset.tdel);saveF();focusTick(true)}
   else if(b=g('data-rdel')){F.rewards=F.rewards.filter(x=>x.id!==+b.dataset.rdel);saveF();focusTick(true)}
   else if(e.target.id==='tAdd')addTask();
   else if(e.target.id==='rAdd')addReward();
   else if(e.target.id==='tClr'){F.tasks=F.tasks.filter(x=>!x.done);saveF();focusTick(true)}
   else if(e.target.id==='qSkip'){F.q=newQuest(F.q);saveF();focusTick(true)}
-  else if(e.target.id==='qDone'){if(running()){F.q.m=1;focusTick(true)}else toast('Start the stopwatch first.')}
   else if(e.target.closest&&e.target.closest('#qLineBox')){ui.tab='quests';saveUi();sig='';render()}
 });
 window.addEventListener('beforeunload',e=>{if(running()){e.preventDefault();e.returnValue=''}});
